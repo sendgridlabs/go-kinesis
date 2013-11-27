@@ -18,9 +18,9 @@ import (
 )
 
 const (
-  iSO8601BasicFormat = "20060102T150405Z"
-  iSO8601BasicFormatShort = "20060102"
-  AWS4_URL = "aws4_request"
+  iSO8601BasicFormat            = "20060102T150405Z"
+  iSO8601BasicFormatShort       = "20060102"
+  AWS4_URL                      = "aws4_request"
 )
 
 var lf = []byte{'\n'}
