@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
+	"strconv"
 	"strings"
-  "strconv"
-  "sort"
 	"time"
 )
 
@@ -79,41 +79,41 @@ func makeParams(action string) map[string]string {
 // errors
 
 type Error struct {
-  // HTTP status code (200, 403, ...)
-  StatusCode int
-  // EC2 error code ("UnsupportedOperation", ...)
-  Code string
-  // The human-oriented error message
-  Message   string
-  RequestId string `xml:"RequestID"`
+	// HTTP status code (200, 403, ...)
+	StatusCode int
+	// EC2 error code ("UnsupportedOperation", ...)
+	Code string
+	// The human-oriented error message
+	Message   string
+	RequestId string `xml:"RequestID"`
 }
 
 func (err *Error) Error() string {
-  if err.Code == "" {
-    return err.Message
-  }
-  return fmt.Sprintf("%s (%s)", err.Message, err.Code)
+	if err.Code == "" {
+		return err.Message
+	}
+	return fmt.Sprintf("%s (%s)", err.Message, err.Code)
 }
 
 type jsonErrors struct {
-  RequestId string
-  Errors    []Error
+	RequestId string
+	Errors    []Error
 }
 
 func buildError(r *http.Response) error {
-  errors := jsonErrors{}
-  json.NewDecoder(r.Body).Decode(&errors)
+	errors := jsonErrors{}
+	json.NewDecoder(r.Body).Decode(&errors)
 
-  var err Error
-  if len(errors.Errors) > 0 {
-    err = errors.Errors[0]
-  }
-  err.RequestId = errors.RequestId
-  err.StatusCode = r.StatusCode
-  if err.Message == "" {
-    err.Message = r.Status
-  }
-  return &err
+	var err Error
+	if len(errors.Errors) > 0 {
+		err = errors.Errors[0]
+	}
+	err.RequestId = errors.RequestId
+	err.StatusCode = r.StatusCode
+	if err.Message == "" {
+		err.Message = r.Status
+	}
+	return &err
 	return nil
 }
 
