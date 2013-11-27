@@ -17,8 +17,11 @@ import (
   "time"
 )
 
-const iSO8601BasicFormat = "20060102T150405Z"
-const iSO8601BasicFormatShort = "20060102"
+const (
+  iSO8601BasicFormat = "20060102T150405Z"
+  iSO8601BasicFormatShort = "20060102"
+  AWS4_URL = "aws4_request"
+)
 
 var lf = []byte{'\n'}
 
@@ -26,7 +29,7 @@ func (k *Auth) sign(s *Service, t time.Time) []byte {
   h := ghmac([]byte("AWS4"+k.SecretKey), []byte(t.Format(iSO8601BasicFormatShort)))
   h = ghmac(h, []byte(s.Region))
   h = ghmac(h, []byte(s.Name))
-  h = ghmac(h, []byte("aws4_request"))
+  h = ghmac(h, []byte(AWS4_URL))
   return h
 }
 
@@ -192,7 +195,7 @@ func (s *Service) writeStringToSign(w io.Writer, t time.Time, r *http.Request) {
 }
 
 func (s *Service) creds(t time.Time) string {
-  return t.Format(iSO8601BasicFormatShort) + "/" + s.Region + "/" + s.Name + "/aws4_request"
+  return fmt.Sprintf("%s/%s/%s/%s", t.Format(iSO8601BasicFormatShort), s.Region, s.Name, AWS4_URL)
 }
 
 func ghmac(key, data []byte) []byte {
