@@ -81,11 +81,11 @@ func makeParams(action string) map[string]string {
 type Error struct {
   // HTTP status code (200, 403, ...)
   StatusCode int
-  // EC2 error code ("UnsupportedOperation", ...)
+  // error code ("UnsupportedOperation", ...)
   Code string
   // The human-oriented error message
   Message   string
-  RequestId string `xml:"RequestID"`
+  RequestId string
 }
 
 func (err *Error) Error() string {
@@ -114,7 +114,6 @@ func buildError(r *http.Response) error {
     err.Message = r.Status
   }
   return &err
-  return nil
 }
 
 // query
