@@ -68,9 +68,11 @@ func main() {
       resp11, err := ksis.GetNextRecords(args)
 
       if len(resp11.Records) > 0 {
+        fmt.Printf("GetNextRecords Data BEGIN")
         for _, d := range resp11.Records {
           fmt.Printf("GetNextRecords Data: %v\n", string(d.Data))
         }
+        fmt.Printf("GetNextRecords Data END")
       }
 
       if len(resp11.Records) == 0 || err != nil {
