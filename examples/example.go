@@ -13,7 +13,7 @@ func main() {
 
   ksis := kinesis.New("", "")
 
-  err := ksis.CreateStream("test", 2)
+  err := ksis.CreateStream(streamName, 2)
   if err != nil {
     fmt.Printf("CreateStream ERROR: %v\n", err)
   }
@@ -33,7 +33,7 @@ func main() {
     fmt.Printf("DescribeStream: %v\n", resp3)
 
     if resp3.StreamDescription.StreamStatus != "ACTIVE" {
-      time.Sleep(2 * time.Second)
+      time.Sleep(4 * time.Second)
       timeout <- true
     } else {
       break
@@ -48,8 +48,11 @@ func main() {
     args.Add("Data", []byte(fmt.Sprintf("Hello AWS Kinesis %d", i)))
     args.Add("PartitionKey", fmt.Sprintf("partitionKey-%d", i))
     resp4, err := ksis.PutRecord(args)
-    fmt.Printf("PutRecord: %v\n", resp4)
-    fmt.Printf("PutRecord err: %v\n", err)
+    if err != nil {
+      fmt.Printf("PutRecord err: %v\n", err)
+    } else {
+      fmt.Printf("PutRecord: %v\n", resp4)
+    }
   }
 
   for _, shard := range resp3.StreamDescription.Shards {
@@ -68,11 +71,11 @@ func main() {
       resp11, err := ksis.GetNextRecords(args)
 
       if len(resp11.Records) > 0 {
-        fmt.Printf("GetNextRecords Data BEGIN")
+        fmt.Printf("GetNextRecords Data BEGIN\n")
         for _, d := range resp11.Records {
           fmt.Printf("GetNextRecords Data: %v\n", string(d.Data))
         }
-        fmt.Printf("GetNextRecords Data END")
+        fmt.Printf("GetNextRecords Data END\n")
       }
 
       if len(resp11.Records) == 0 || err != nil {
@@ -80,8 +83,6 @@ func main() {
       } else if resp11.NextShardIterator == "" {
         break
       }
-
-      fmt.Printf("\n")
 
       shardIterator = resp11.NextShardIterator
     }
