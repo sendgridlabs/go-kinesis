@@ -51,8 +51,7 @@ func Sign(authKeys *Auth, r *http.Request) error {
   sv := new(Service)
   sv.Name = parts[0]
   sv.Region = parts[1]
-  sv.Sign(authKeys, r)
-  return nil
+  return sv.Sign(authKeys, r)
 }
 
 // Sign signs an HTTP request with the given AWS keys for use on service s.

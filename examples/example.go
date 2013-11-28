@@ -10,7 +10,7 @@ func main() {
   fmt.Println("Begin")
 
   streamName := "test"
-
+  // set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY
   ksis := kinesis.New("", "")
 
   err := ksis.CreateStream(streamName, 2)
@@ -92,4 +92,6 @@ func main() {
   if err != nil {
     fmt.Printf("DeleteStream ERROR: %v\n", err)
   }
+
+  fmt.Println("End")
 }
