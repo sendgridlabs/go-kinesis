@@ -111,6 +111,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
   if err != nil {
     return err
   }
+  defer response.Body.Close()
 
   if response.StatusCode != 200 {
     return buildError(response)
