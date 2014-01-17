@@ -4,7 +4,7 @@ import (
   "net/http"
   "os"
 )
-
+// Auth store information about AWS Credentials
 type Auth struct {
   AccessKey, SecretKey, Token string
 }
@@ -26,14 +26,14 @@ func NewClient(auth *Auth) *Client {
   }
   return &Client{Auth: auth}
 }
-
+// get client
 func (c *Client) client() *http.Client {
   if c.Client == nil {
     return http.DefaultClient
   }
   return c.Client
 }
-
+// do some request, but sign it before sending
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
   Sign(c.Auth, req)
   return c.client().Do(req)

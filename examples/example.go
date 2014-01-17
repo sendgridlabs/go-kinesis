@@ -68,14 +68,14 @@ func main() {
     for {
       args = kinesis.NewArgs()
       args.Add("ShardIterator", shardIterator)
-      resp11, err := ksis.GetNextRecords(args)
+      resp11, err := ksis.GetRecords(args)
 
       if len(resp11.Records) > 0 {
-        fmt.Printf("GetNextRecords Data BEGIN\n")
+        fmt.Printf("GetRecords Data BEGIN\n")
         for _, d := range resp11.Records {
-          fmt.Printf("GetNextRecords Data: %v\n", string(d.Data))
+          fmt.Printf("GetRecords Data: %v\n", string(d.Data))
         }
-        fmt.Printf("GetNextRecords Data END\n")
+        fmt.Printf("GetRecords Data END\n")
       }
 
       if len(resp11.Records) == 0 || err != nil {

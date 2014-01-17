@@ -1,3 +1,4 @@
+// Package provide GOlang API for http://aws.amazon.com/kinesis/
 package kinesis
 
 import (
@@ -15,15 +16,14 @@ const (
 var (
   timeNow = time.Now
 )
-
+// Structure for kinesis client
 type Kinesis struct {
   client  *Client
   Region  string
   Version string
 }
 
-// New
-
+// Initialize new client for AWS Kinesis
 func New(access_key, secret_key string) *Kinesis {
   keys := &Auth{
     AccessKey: access_key,
@@ -32,13 +32,13 @@ func New(access_key, secret_key string) *Kinesis {
   return &Kinesis{client: NewClient(keys), Version: "20131104", Region: "us-east-1"}
 }
 
-// params
+// Create params object for request
 func makeParams(action string) map[string]string {
   params := make(map[string]string)
   params[ACTION_KEY] = action
   return params
 }
-
+// RequestArgs store params for request
 type RequestArgs struct {
   params     map[string]interface{}
 }
@@ -53,8 +53,7 @@ func (f *RequestArgs) Add(name string, value interface{}) {
   f.params[name] = value
 }
 
-// errors
-
+// Error represent error from Kinesis API
 type Error struct {
   // HTTP status code (200, 403, ...)
   StatusCode int
@@ -64,7 +63,7 @@ type Error struct {
   Message   string
   RequestId string
 }
-
+// Return error message from error object
 func (err *Error) Error() string {
   if err.Code == "" {
     return err.Message
@@ -89,8 +88,7 @@ func buildError(r *http.Response) error {
   return &err
 }
 
-// query
-
+// Query by AWS API
 func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp interface{}) error {
   jsonData, err := json.Marshal(data)
   if err != nil {
@@ -124,8 +122,9 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
   return json.NewDecoder(response.Body).Decode(resp)
 }
 
-// CreateStream
-
+// CreateStream adds a new Amazon Kinesis stream to your AWS account
+// StreamName is a name of stream, ShardCount is number of shards
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html
 func (kinesis *Kinesis) CreateStream(StreamName string, ShardCount int) error {
   params := makeParams("CreateStream")
   requestParams := struct {
@@ -142,8 +141,9 @@ func (kinesis *Kinesis) CreateStream(StreamName string, ShardCount int) error {
   return nil
 }
 
-// DeleteStream
-
+// DeleteStream deletes a stream and all of its shards and data from your AWS account
+// StreamName is a name of stream
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_DeleteStream.html
 func (kinesis *Kinesis) DeleteStream(StreamName string) error {
   params := makeParams("DeleteStream")
   requestParams := struct {
@@ -158,8 +158,8 @@ func (kinesis *Kinesis) DeleteStream(StreamName string) error {
   return nil
 }
 
-// MergeShards
-
+// MergeShards merges two adjacent shards in a stream and combines them into a single shard to reduce the stream's capacity to ingest and transport data
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_MergeShards.html
 func (kinesis *Kinesis) MergeShards(args *RequestArgs) error {
   params := makeParams("MergeShards")
   err := kinesis.query(params, args.params, nil)
@@ -169,8 +169,8 @@ func (kinesis *Kinesis) MergeShards(args *RequestArgs) error {
   return nil
 }
 
-// SplitShard
-
+// SplitShard splits a shard into two new shards in the stream, to increase the stream's capacity to ingest and transport data
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_SplitShard.html
 func (kinesis *Kinesis) SplitShard(args *RequestArgs) error {
   params := makeParams("SplitShard")
   err := kinesis.query(params, args.params, nil)
@@ -180,13 +180,14 @@ func (kinesis *Kinesis) SplitShard(args *RequestArgs) error {
   return nil
 }
 
-// ListStreams
-
+// ListStreamsResp stores the information that provides by ListStreams API call
 type ListStreamsResp struct {
   IsMoreDataAvailable bool
   StreamNames         []string
 }
 
+// ListStreams returns an array of the names of all the streams that are associated with the AWS account making the ListStreams request
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreams.html
 func (kinesis *Kinesis) ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error) {
   params := makeParams("ListStreams")
   resp = &ListStreamsResp{}
@@ -197,8 +198,7 @@ func (kinesis *Kinesis) ListStreams(args *RequestArgs) (resp *ListStreamsResp, e
   return
 }
 
-// DescribeStream
-
+// DescribeStreamShards stores the information about list of shards inside DescribeStreamResp
 type DescribeStreamShards struct {
   AdjacentParentShardId     string
   HashKeyRange struct {
@@ -212,7 +212,7 @@ type DescribeStreamShards struct {
   }
   ShardId                   string
 }
-
+// DescribeStreamResp stores the information that provides by DescribeStream API call
 type DescribeStreamResp struct {
   StreamDescription struct {
     IsMoreDataAvailable     bool
@@ -223,6 +223,12 @@ type DescribeStreamResp struct {
   }
 }
 
+// DescribeStream returns the following information about the stream: the current status of the stream,
+// the stream Amazon Resource Name (ARN), and an array of shard objects that comprise the stream.
+// For each shard object there is information about the hash key and sequence number ranges that
+// the shard spans, and the IDs of any earlier shards that played in a role in a MergeShards or
+// SplitShard operation that created the shard
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html
 func (kinesis *Kinesis) DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error) {
   params := makeParams("DescribeStream")
   resp = &DescribeStreamResp{}
@@ -233,12 +239,13 @@ func (kinesis *Kinesis) DescribeStream(args *RequestArgs) (resp *DescribeStreamR
   return
 }
 
-// GetShardIterator
-
+// GetShardIteratorResp stores the information that provides by GetShardIterator API call
 type GetShardIteratorResp struct {
   ShardIterator         string
 }
 
+// GetShardIterator returns a shard iterator
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html
 func (kinesis *Kinesis) GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error) {
   params := makeParams("GetShardIterator")
   resp = &GetShardIteratorResp{}
@@ -249,22 +256,23 @@ func (kinesis *Kinesis) GetShardIterator(args *RequestArgs) (resp *GetShardItera
   return
 }
 
-// GetNextRecords
-
-type GetNextRecordsRecords struct {
+// GetNextRecordsRecords stores the information that provides by GetNextRecordsResp
+type GetRecordsRecords struct {
   Data                      []byte
   PartitionKey              string
   SequenceNumber            string
 }
-
-type GetNextRecordsResp struct {
+// GetNextRecordsResp stores the information that provides by GetNextRecords API call
+type GetRecordsResp struct {
   NextShardIterator           string
-  Records                     []GetNextRecordsRecords
+  Records                     []GetRecordsRecords
 }
 
-func (kinesis *Kinesis) GetNextRecords(args *RequestArgs) (resp *GetNextRecordsResp, err error) {
-  params := makeParams("GetNextRecords")
-  resp = &GetNextRecordsResp{}
+// GetRecords returns one or more data records from a shard
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html
+func (kinesis *Kinesis) GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error) {
+  params := makeParams("GetRecords")
+  resp = &GetRecordsResp{}
   err = kinesis.query(params, args.params, resp)
   if err != nil {
     return nil, err
@@ -272,13 +280,14 @@ func (kinesis *Kinesis) GetNextRecords(args *RequestArgs) (resp *GetNextRecordsR
   return
 }
 
-// PutRecord
-
+// PutRecordResp stores the information that provides by PutRecord API call
 type PutRecordResp struct {
   SequenceNumber          string
   ShardId                 string
 }
 
+// PutRecord puts a data record into an Amazon Kinesis stream from a producer
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html
 func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err error) {
   params := makeParams("PutRecord")
   resp = &PutRecordResp{}
