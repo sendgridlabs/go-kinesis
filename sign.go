@@ -1,5 +1,3 @@
-// Package aws4 signs HTTP requests as prescribed in
-// http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
 package kinesis
 
 import (
@@ -24,6 +22,9 @@ const (
 )
 
 var lf = []byte{'\n'}
+
+// Sign API request by
+// http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
 
 func (k *Auth) sign(s *Service, t time.Time) []byte {
   h := ghmac([]byte("AWS4"+k.SecretKey), []byte(t.Format(iSO8601BasicFormatShort)))
