@@ -29,7 +29,7 @@ func New(access_key, secret_key string) *Kinesis {
     AccessKey: access_key,
     SecretKey: secret_key,
   }
-  return &Kinesis{client: NewClient(keys), Version: "20131104", Region: "us-east-1"}
+  return &Kinesis{client: NewClient(keys), Version: "20131202", Region: "us-east-1"}
 }
 
 // Create params object for request

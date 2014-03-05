@@ -88,9 +88,9 @@ func main() {
     }
   }
 
-  err = ksis.DeleteStream("test")
-  if err != nil {
-    fmt.Printf("DeleteStream ERROR: %v\n", err)
+  err1 := ksis.DeleteStream("test")
+  if err1 != nil {
+    fmt.Printf("DeleteStream ERROR: %v\n", err1)
   }
 
   fmt.Println("End")
