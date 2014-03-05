@@ -6,6 +6,35 @@ import (
   kinesis "github.com/sendgridlabs/go-kinesis"
 )
 
+func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
+  args := kinesis.NewArgs()
+  args.Add("StreamName", streamName)
+  args.Add("ShardId", ShardId)
+  args.Add("ShardIteratorType", "TRIM_HORIZON")
+  resp10, _ := ksis.GetShardIterator(args)
+
+  shardIterator := resp10.ShardIterator
+
+  for {
+    args = kinesis.NewArgs()
+    args.Add("ShardIterator", shardIterator)
+    resp11, err := ksis.GetRecords(args)
+
+    if len(resp11.Records) > 0 {
+      fmt.Printf("GetRecords Data BEGIN\n")
+      for _, d := range resp11.Records {
+        fmt.Printf("GetRecords Data: %v\n", string(d.Data))
+      }
+      fmt.Printf("GetRecords Data END\n")
+    } else if resp11.NextShardIterator == "" || shardIterator == resp11.NextShardIterator || err != nil {
+      fmt.Printf("GetRecords ERROR: %v\n", err)
+      break
+    }
+
+    shardIterator = resp11.NextShardIterator
+  }
+}
+
 func main() {
   fmt.Println("Begin")
 
@@ -56,37 +85,11 @@ func main() {
   }
 
   for _, shard := range resp3.StreamDescription.Shards {
-
-    args = kinesis.NewArgs()
-    args.Add("StreamName", streamName)
-    args.Add("ShardId", shard.ShardId)
-    args.Add("ShardIteratorType", "TRIM_HORIZON")
-    resp10, _ := ksis.GetShardIterator(args)
-
-    shardIterator := resp10.ShardIterator
-
-    for {
-      args = kinesis.NewArgs()
-      args.Add("ShardIterator", shardIterator)
-      resp11, err := ksis.GetRecords(args)
-
-      if len(resp11.Records) > 0 {
-        fmt.Printf("GetRecords Data BEGIN\n")
-        for _, d := range resp11.Records {
-          fmt.Printf("GetRecords Data: %v\n", string(d.Data))
-        }
-        fmt.Printf("GetRecords Data END\n")
-      }
-
-      if len(resp11.Records) == 0 || err != nil {
-        break
-      } else if resp11.NextShardIterator == "" {
-        break
-      }
-
-      shardIterator = resp11.NextShardIterator
-    }
+    go getRecords(ksis, streamName, shard.ShardId)
   }
+
+  var inputGuess string
+  fmt.Scanf("%s\n", &inputGuess)
 
   err1 := ksis.DeleteStream("test")
   if err1 != nil {
