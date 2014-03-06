@@ -23,7 +23,8 @@ func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
     if len(resp11.Records) > 0 {
       fmt.Printf("GetRecords Data BEGIN\n")
       for _, d := range resp11.Records {
-        fmt.Printf("GetRecords Data: %v\n", string(d.Data))
+        res, err := d.GetData()
+        fmt.Printf("GetRecords Data: %v, err: %v\n", string(res), err)
       }
       fmt.Printf("GetRecords Data END\n")
     } else if resp11.NextShardIterator == "" || shardIterator == resp11.NextShardIterator || err != nil {
@@ -74,7 +75,7 @@ func main() {
   for i := 0; i < 10; i++ {
     args = kinesis.NewArgs()
     args.Add("StreamName", streamName)
-    args.Add("Data", []byte(fmt.Sprintf("Hello AWS Kinesis %d", i)))
+    args.AddData([]byte(fmt.Sprintf("Hello AWS Kinesis %d", i)))
     args.Add("PartitionKey", fmt.Sprintf("partitionKey-%d", i))
     resp4, err := ksis.PutRecord(args)
     if err != nil {
