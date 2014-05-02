@@ -215,8 +215,8 @@ type DescribeStreamShards struct {
   }
   ParentShardId             string
   SequenceNumberRange struct {
-    EndingHashKey           string
-    StartingHashKey         string
+    EndingSequenceNumber    string
+    StartingSequenceNumber  string
   }
   ShardId                   string
 }
