@@ -2,8 +2,8 @@
 package kinesis
 
 import (
-  "encoding/json"
   "encoding/base64"
+  "encoding/json"
   "fmt"
   "net/http"
   "strings"
@@ -17,11 +17,25 @@ const (
 var (
   timeNow = time.Now
 )
+
 // Structure for kinesis client
 type Kinesis struct {
   client  *Client
   Region  string
   Version string
+}
+
+// Interface implemented by Kinesis
+type KinesisClient interface {
+  CreateStream(StreamName string, ShardCount int) error
+  DeleteStream(StreamName string) error
+  MergeShards(args *RequestArgs) error
+  SplitShard(args *RequestArgs) error
+  ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error)
+  DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error)
+  GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error)
+  GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error)
+  PutRecord(args *RequestArgs) (resp *PutRecordResp, err error)
 }
 
 // Initialize new client for AWS Kinesis
@@ -39,9 +53,10 @@ func makeParams(action string) map[string]string {
   params[ACTION_KEY] = action
   return params
 }
+
 // RequestArgs store params for request
 type RequestArgs struct {
-  params     map[string]interface{}
+  params map[string]interface{}
 }
 
 // NewFilter creates a new Filter.
@@ -71,6 +86,7 @@ type Error struct {
   Message   string
   RequestId string
 }
+
 // Return error message from error object
 func (err *Error) Error() string {
   if err.Code == "" {
@@ -80,7 +96,7 @@ func (err *Error) Error() string {
 }
 
 type jsonErrors struct {
-  Message   string
+  Message string
 }
 
 func buildError(r *http.Response) error {
@@ -138,7 +154,7 @@ func (kinesis *Kinesis) CreateStream(StreamName string, ShardCount int) error {
   requestParams := struct {
     StreamName string
     ShardCount int
-  } {
+  }{
     StreamName,
     ShardCount,
   }
@@ -156,7 +172,7 @@ func (kinesis *Kinesis) DeleteStream(StreamName string) error {
   params := makeParams("DeleteStream")
   requestParams := struct {
     StreamName string
-  } {
+  }{
     StreamName,
   }
   err := kinesis.query(params, requestParams, nil)
@@ -208,26 +224,27 @@ func (kinesis *Kinesis) ListStreams(args *RequestArgs) (resp *ListStreamsResp, e
 
 // DescribeStreamShards stores the information about list of shards inside DescribeStreamResp
 type DescribeStreamShards struct {
-  AdjacentParentShardId     string
-  HashKeyRange struct {
-    EndingHashKey           string
-    StartingHashKey         string
+  AdjacentParentShardId string
+  HashKeyRange          struct {
+    EndingHashKey   string
+    StartingHashKey string
   }
-  ParentShardId             string
+  ParentShardId       string
   SequenceNumberRange struct {
-    EndingSequenceNumber    string
-    StartingSequenceNumber  string
+    EndingSequenceNumber   string
+    StartingSequenceNumber string
   }
-  ShardId                   string
+  ShardId string
 }
+
 // DescribeStreamResp stores the information that provides by DescribeStream API call
 type DescribeStreamResp struct {
   StreamDescription struct {
-    IsMoreDataAvailable     bool
-    Shards                  []DescribeStreamShards
-    StreamARN               string
-    StreamName              string
-    StreamStatus            string
+    IsMoreDataAvailable bool
+    Shards              []DescribeStreamShards
+    StreamARN           string
+    StreamName          string
+    StreamStatus        string
   }
 }
 
@@ -249,7 +266,7 @@ func (kinesis *Kinesis) DescribeStream(args *RequestArgs) (resp *DescribeStreamR
 
 // GetShardIteratorResp stores the information that provides by GetShardIterator API call
 type GetShardIteratorResp struct {
-  ShardIterator         string
+  ShardIterator string
 }
 
 // GetShardIterator returns a shard iterator
@@ -266,9 +283,9 @@ func (kinesis *Kinesis) GetShardIterator(args *RequestArgs) (resp *GetShardItera
 
 // GetNextRecordsRecords stores the information that provides by GetNextRecordsResp
 type GetRecordsRecords struct {
-  Data                      []byte
-  PartitionKey              string
-  SequenceNumber            string
+  Data           []byte
+  PartitionKey   string
+  SequenceNumber string
 }
 
 func (r GetRecordsRecords) GetData() ([]byte, error) {
@@ -277,10 +294,11 @@ func (r GetRecordsRecords) GetData() ([]byte, error) {
   n, err := enc.Decode(dbuf, r.Data)
   return dbuf[:n], err
 }
+
 // GetNextRecordsResp stores the information that provides by GetNextRecords API call
 type GetRecordsResp struct {
-  NextShardIterator           string
-  Records                     []GetRecordsRecords
+  NextShardIterator string
+  Records           []GetRecordsRecords
 }
 
 // GetRecords returns one or more data records from a shard
@@ -297,8 +315,8 @@ func (kinesis *Kinesis) GetRecords(args *RequestArgs) (resp *GetRecordsResp, err
 
 // PutRecordResp stores the information that provides by PutRecord API call
 type PutRecordResp struct {
-  SequenceNumber          string
-  ShardId                 string
+  SequenceNumber string
+  ShardId        string
 }
 
 // PutRecord puts a data record into an Amazon Kinesis stream from a producer
