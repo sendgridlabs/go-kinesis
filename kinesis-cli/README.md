@@ -4,10 +4,10 @@ kinesis-cli is a tool for interacting with kinesis from the command line.
 
 ## Setup
 
-You can either install the kinesis-cli using `goinstall`:
+You can either install the kinesis-cli using `go get` or `go install`:
 (TODO: verify this works)
 
-    $ goinstall github.com/sendgridlabs/go-kinesis/kinesis-cli
+    $ go install github.com/sendgridlabs/go-kinesis/kinesis-cli
 
 or build it and run it from the kinesis-cli folder:
 

@@ -2,19 +2,22 @@
 kinesis-cli is a command line interface tool for interacting with AWS kinesis.
 
 To install:
-go install sendgridlabs/go-kinesis/kinesis-cli
+go get github.com/sendgridlabs/go-kinesis/kinesis-cli
+
+To build:
+cd $GOPATH/src/github.com/sendgridlabs/go-kinesis/kinesis-cli; go build
 
 To use:
-run kinesis-cli to see the usage.
+run ./kinesis-cli to see the usage.
 */
 
 package main
 
 import (
-	"../"
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/sendgridlabs/go-kinesis"
 	"math/big"
 	"os"
 	"strconv"
