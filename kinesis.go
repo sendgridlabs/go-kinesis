@@ -206,8 +206,8 @@ func (kinesis *Kinesis) SplitShard(args *RequestArgs) error {
 
 // ListStreamsResp stores the information that provides by ListStreams API call
 type ListStreamsResp struct {
-  IsMoreDataAvailable bool
-  StreamNames         []string
+  HasMoreStreams bool
+  StreamNames    []string
 }
 
 // ListStreams returns an array of the names of all the streams that are associated with the AWS account making the ListStreams request
@@ -240,11 +240,11 @@ type DescribeStreamShards struct {
 // DescribeStreamResp stores the information that provides by DescribeStream API call
 type DescribeStreamResp struct {
   StreamDescription struct {
-    IsMoreDataAvailable bool
-    Shards              []DescribeStreamShards
-    StreamARN           string
-    StreamName          string
-    StreamStatus        string
+    HasMoreShards bool
+    Shards        []DescribeStreamShards
+    StreamARN     string
+    StreamName    string
+    StreamStatus  string
   }
 }
 
