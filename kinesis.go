@@ -142,7 +142,6 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
   if resp == nil {
     return nil
   }
-
   return json.NewDecoder(response.Body).Decode(resp)
 }
 

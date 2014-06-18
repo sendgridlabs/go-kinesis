@@ -5,6 +5,11 @@ import (
   "os"
 )
 
+const (
+  ACCESS_ENV_KEY = "AWS_ACCESS_KEY"
+  SECRET_ENV_KEY = "AWS_SECRET_KEY"
+)
+
 // Auth store information about AWS Credentials
 type Auth struct {
   AccessKey, SecretKey, Token string
@@ -20,10 +25,10 @@ type Client struct {
 // New creates a new Client.
 func NewClient(auth *Auth) *Client {
   if auth.AccessKey == "" {
-    auth.AccessKey = os.Getenv("AWS_ACCESS_KEY")
+    auth.AccessKey = os.Getenv(ACCESS_ENV_KEY)
   }
   if auth.SecretKey == "" {
-    auth.SecretKey = os.Getenv("AWS_SECRET_KEY")
+    auth.SecretKey = os.Getenv(SECRET_ENV_KEY)
   }
   return &Client{Auth: auth}
 }

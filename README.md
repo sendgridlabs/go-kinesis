@@ -8,3 +8,7 @@ GO-lang library for AWS Kinesis API.
 ## Example
 
 Example you can find in folder `examples`.
+
+## Command line interface
+
+You can find a tool for interacting with kinesis from the command line in folder `kinesis-cli`.
