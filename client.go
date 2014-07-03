@@ -6,8 +6,9 @@ import (
 )
 
 const (
-  ACCESS_ENV_KEY = "AWS_ACCESS_KEY"
-  SECRET_ENV_KEY = "AWS_SECRET_KEY"
+  ACCESS_ENV_KEY  = "AWS_ACCESS_KEY"
+  SECRET_ENV_KEY  = "AWS_SECRET_KEY"
+  REGION_ENV_NAME = "AWS_REGION_NAME"
 )
 
 // Auth store information about AWS Credentials
@@ -31,6 +32,13 @@ func NewClient(auth *Auth) *Client {
     auth.SecretKey = os.Getenv(SECRET_ENV_KEY)
   }
   return &Client{Auth: auth}
+}
+
+func GetRegion(region Region) string {
+  if region.Name == "" {
+    return os.Getenv(REGION_ENV_NAME)
+  }
+  return region.Name
 }
 
 // get client

@@ -18,6 +18,14 @@ var (
   timeNow = time.Now
 )
 
+type Region struct {
+  Name string
+}
+
+var USEast = Region{"us-east-1"}
+var USWest2 = Region{"us-west-2"}
+var EUWest = Region{"eu-west-1"}
+
 // Structure for kinesis client
 type Kinesis struct {
   client  *Client
@@ -39,12 +47,12 @@ type KinesisClient interface {
 }
 
 // Initialize new client for AWS Kinesis
-func New(access_key, secret_key string) *Kinesis {
+func New(access_key string, secret_key string, region Region) *Kinesis {
   keys := &Auth{
     AccessKey: access_key,
     SecretKey: secret_key,
   }
-  return &Kinesis{client: NewClient(keys), Version: "20131202", Region: "us-east-1"}
+  return &Kinesis{client: NewClient(keys), Version: "20131202", Region: GetRegion(region)}
 }
 
 // Create params object for request

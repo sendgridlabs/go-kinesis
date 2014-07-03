@@ -3,7 +3,8 @@ package main
 import (
   "fmt"
   "time"
-  kinesis "github.com/sendgridlabs/go-kinesis"
+
+  kinesis "github.com/degenhard/go-kinesis"
 )
 
 func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
@@ -40,8 +41,8 @@ func main() {
   fmt.Println("Begin")
 
   streamName := "test"
-  // set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY
-  ksis := kinesis.New("", "")
+  // set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY AWS_REGION_NAME
+  ksis := kinesis.New("", "", kinesis.Region{})
 
   err := ksis.CreateStream(streamName, 2)
   if err != nil {
@@ -70,7 +71,6 @@ func main() {
     }
 
   }
-
 
   for i := 0; i < 10; i++ {
     args = kinesis.NewArgs()

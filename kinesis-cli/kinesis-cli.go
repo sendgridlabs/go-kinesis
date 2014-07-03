@@ -17,15 +17,16 @@ import (
   "bufio"
   "encoding/json"
   "fmt"
-  "github.com/sendgridlabs/go-kinesis"
   "math/big"
   "os"
   "strconv"
   "strings"
+
+  "github.com/degenhard/go-kinesis"
 )
 
 const HELP = `Usage: ./kinesis-cli <command> [<arg>, ...]
-(Note: expects $AWS_ACCESS_KEY and $AWS_SECRET_KEY to be set)
+(Note: expects $AWS_ACCESS_KEY, $AWS_SECRET_KEY and $AWS_REGION_NAME to be set)
 Commands:
        create   <streamName> [<# shards>]
        delete   <streamName>
@@ -116,8 +117,8 @@ func main() {
   if len(os.Args) < 2 {
     die(true, "Error: no command specified.")
   }
-  if os.Getenv(kinesis.ACCESS_ENV_KEY) == "" || os.Getenv(kinesis.SECRET_ENV_KEY) == "" {
-    fmt.Printf("WARNING: %s and/or %s environment variables not set.", kinesis.ACCESS_ENV_KEY, kinesis.SECRET_ENV_KEY)
+  if os.Getenv(kinesis.ACCESS_ENV_KEY) == "" || os.Getenv(kinesis.SECRET_ENV_KEY) == "" || os.Getenv(kinesis.REGION_ENV_NAME) == "" {
+    fmt.Printf("WARNING: %s, %s and/or %s environment variables not set.", kinesis.ACCESS_ENV_KEY, kinesis.SECRET_ENV_KEY, kinesis.REGION_ENV_NAME)
   }
   switch os.Args[1] {
   case "create":
@@ -231,7 +232,7 @@ func bigIntFromStr(s string, base int) *big.Int {
 
 func newClient() kinesis.KinesisClient {
   // NOTE: kinesis.client.go sets auth from env when empty.
-  return kinesis.New("", "")
+  return kinesis.New("", "", kinesis.Region{})
 }
 
 func askForShardStartHash(streamName, shardId string) string {
