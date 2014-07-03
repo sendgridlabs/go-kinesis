@@ -4,7 +4,7 @@ import (
   "fmt"
   "time"
 
-  kinesis "github.com/degenhard/go-kinesis"
+  kinesis "github.com/sendgridlabs/go-kinesis"
 )
 
 func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
