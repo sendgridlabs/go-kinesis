@@ -52,7 +52,7 @@ func New(access_key string, secret_key string, region Region) *Kinesis {
 		AccessKey: access_key,
 		SecretKey: secret_key,
 	}
-	return &Kinesis{client: NewClient(keys), Version: "20131202", Region: region.Name}
+	return &Kinesis{client: NewClient(keys), Version: "20131202", Region: GetRegion(region)}
 }
 
 // Create params object for request
