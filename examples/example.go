@@ -71,6 +71,7 @@ func main() {
 
 	}
 
+	// Put records individually
 	for i := 0; i < 10; i++ {
 		args = kinesis.NewArgs()
 		args.Add("StreamName", streamName)
@@ -88,9 +89,29 @@ func main() {
 		go getRecords(ksis, streamName, shard.ShardId)
 	}
 
+	// Put records in batch
+	args = kinesis.NewArgs()
+	args.Add("StreamName", streamName)
+
+	for i := 0; i < 10; i++ {
+		args.AddRecord(
+			[]byte(fmt.Sprintf("Hello AWS Kinesis %d", i)),
+			fmt.Sprintf("partitionKey-%d", i),
+		)
+	}
+
+	resp4, err := ksis.PutRecords(args)
+	if err != nil {
+		fmt.Printf("PutRecords err: %v\n", err)
+	} else {
+		fmt.Printf("PutRecords: %v\n", resp4)
+	}
+
+	// Wait for user input
 	var inputGuess string
 	fmt.Scanf("%s\n", &inputGuess)
 
+	// Delete the stream
 	err1 := ksis.DeleteStream("test")
 	if err1 != nil {
 		fmt.Printf("DeleteStream ERROR: %v\n", err1)
