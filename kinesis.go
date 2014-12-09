@@ -81,7 +81,7 @@ func (f *RequestArgs) AddData(value []byte) {
 	enc := base64.StdEncoding
 	buf := make([]byte, enc.EncodedLen(len(value)))
 	enc.Encode(buf, value)
-	f.params["Data"] = string(buf)
+	f.params["Data"] = buf
 }
 
 // Error represent error from Kinesis API
