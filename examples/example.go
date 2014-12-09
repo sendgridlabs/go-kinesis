@@ -24,8 +24,7 @@ func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
 		if len(resp11.Records) > 0 {
 			fmt.Printf("GetRecords Data BEGIN\n")
 			for _, d := range resp11.Records {
-				res, err := d.GetData()
-				fmt.Printf("GetRecords Data: %v, err: %v\n", string(res), err)
+				fmt.Printf("GetRecords Data: %v\n", string(d.GetData()))
 			}
 			fmt.Printf("GetRecords Data END\n")
 		} else if resp11.NextShardIterator == "" || shardIterator == resp11.NextShardIterator || err != nil {

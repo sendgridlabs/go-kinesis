@@ -2,7 +2,6 @@
 package kinesis
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -78,10 +77,7 @@ func (f *RequestArgs) Add(name string, value interface{}) {
 }
 
 func (f *RequestArgs) AddData(value []byte) {
-	enc := base64.StdEncoding
-	buf := make([]byte, enc.EncodedLen(len(value)))
-	enc.Encode(buf, value)
-	f.params["Data"] = buf
+	f.params["Data"] = value
 }
 
 // Error represent error from Kinesis API
@@ -295,11 +291,8 @@ type GetRecordsRecords struct {
 	SequenceNumber string
 }
 
-func (r GetRecordsRecords) GetData() ([]byte, error) {
-	enc := base64.StdEncoding
-	dbuf := make([]byte, enc.DecodedLen(len(r.Data)))
-	n, err := enc.Decode(dbuf, r.Data)
-	return dbuf[:n], err
+func (r GetRecordsRecords) GetData() ([]byte) {
+	return r.Data
 }
 
 // GetNextRecordsResp stores the information that provides by GetNextRecords API call
