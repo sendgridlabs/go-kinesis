@@ -36,13 +36,14 @@ type Kinesis struct {
 type KinesisClient interface {
 	CreateStream(StreamName string, ShardCount int) error
 	DeleteStream(StreamName string) error
-	MergeShards(args *RequestArgs) error
-	SplitShard(args *RequestArgs) error
-	ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error)
 	DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error)
-	GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error)
 	GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error)
+	GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error)
+	ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error)
+	MergeShards(args *RequestArgs) error
 	PutRecord(args *RequestArgs) (resp *PutRecordResp, err error)
+	PutRecords(args *RequestArgs) (resp *PutRecordsResp, err error)
+	SplitShard(args *RequestArgs) error
 }
 
 // Initialize new client for AWS Kinesis
@@ -63,12 +64,15 @@ func makeParams(action string) map[string]string {
 
 // RequestArgs store params for request
 type RequestArgs struct {
-	params map[string]interface{}
+	params  map[string]interface{}
+	Records []PutRecordsRecord
 }
 
 // NewFilter creates a new Filter.
 func NewArgs() *RequestArgs {
-	return &RequestArgs{make(map[string]interface{})}
+	return &RequestArgs{
+		params: make(map[string]interface{}),
+	}
 }
 
 // Add appends a filtering parameter with the given name and value(s).
@@ -124,14 +128,21 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	}
 
 	// request
-	request, err := http.NewRequest("POST", fmt.Sprintf("https://kinesis.%s.amazonaws.com", kinesis.Region), bytes.NewReader(jsonData))
+	request, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://kinesis.%s.amazonaws.com", kinesis.Region),
+		bytes.NewReader(jsonData),
+	)
+
 	if err != nil {
 		return err
 	}
+
 	// headers
 	request.Header.Set("Content-Type", "application/x-amz-json-1.1")
 	request.Header.Set("X-Amz-Target", fmt.Sprintf("Kinesis_%s.%s", kinesis.Version, params[ACTION_KEY]))
 	request.Header.Set("User-Agent", "Golang Kinesis")
+
 	// response
 	response, err := kinesis.client.Do(request)
 	if err != nil {
@@ -292,7 +303,7 @@ type GetRecordsRecords struct {
 	SequenceNumber string
 }
 
-func (r GetRecordsRecords) GetData() ([]byte) {
+func (r GetRecordsRecords) GetData() []byte {
 	return r.Data
 }
 
@@ -330,4 +341,47 @@ func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err e
 		return nil, err
 	}
 	return
+}
+
+// PutRecords puts multiple data records into an Amazon Kinesis stream from a producer
+// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html
+func (kinesis *Kinesis) PutRecords(args *RequestArgs) (resp *PutRecordsResp, err error) {
+	params := makeParams("PutRecords")
+	resp = &PutRecordsResp{}
+	args.Add("Records", args.Records)
+	err = kinesis.query(params, args.params, resp)
+
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+// PutRecordsResp stores the information that provides by PutRecord API call
+type PutRecordsResp struct {
+	FailedRecordCount int
+	Records           []PutRecordsRespRecord
+}
+
+// RecordResp stores individual Record information provided by PutRecords API call
+type PutRecordsRespRecord struct {
+	ErrorCode      string
+	ErrorMessage   string
+	SequenceNumber string
+	ShardId        string
+}
+
+// Add data and partition for sending multiple Records to Kinesis in one API call
+func (f *RequestArgs) AddRecord(value []byte, partitionKey string) {
+	r := PutRecordsRecord{
+		Data:         value,
+		PartitionKey: partitionKey,
+	}
+	f.Records = append(f.Records, r)
+}
+
+// PutRecordsRecord stores the Data and PartitionKey for batch calls to Kinesis API
+type PutRecordsRecord struct {
+	Data         []byte
+	PartitionKey string
 }

@@ -22,3 +22,16 @@ func TestRegions(t *testing.T) {
 		t.Errorf("%q != %q", USEast.Name, "us-east-1")
 	}
 }
+
+func TestAddRecord(t *testing.T) {
+	args := NewArgs()
+
+	args.AddRecord(
+		[]byte("data"),
+		"partition_key",
+	)
+
+	if len(args.Records) != 1 {
+		t.Errorf("%q != %q", len(args.Records), 1)
+	}
+}
