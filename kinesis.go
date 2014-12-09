@@ -2,10 +2,10 @@
 package kinesis
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -124,7 +124,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	}
 
 	// request
-	request, err := http.NewRequest("POST", fmt.Sprintf("https://kinesis.%s.amazonaws.com", kinesis.Region), strings.NewReader(string(jsonData)))
+	request, err := http.NewRequest("POST", fmt.Sprintf("https://kinesis.%s.amazonaws.com", kinesis.Region), bytes.NewReader(jsonData))
 	if err != nil {
 		return err
 	}
@@ -146,6 +146,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	if resp == nil {
 		return nil
 	}
+
 	return json.NewDecoder(response.Body).Decode(resp)
 }
 
