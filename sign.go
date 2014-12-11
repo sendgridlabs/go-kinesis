@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -151,16 +151,16 @@ func (s *Service) writeBody(w io.Writer, r *http.Request) {
 }
 
 func (s *Service) writeURI(w io.Writer, r *http.Request) {
-	path := r.URL.RequestURI()
+	ruri := r.URL.RequestURI()
 	if r.URL.RawQuery != "" {
-		path = path[:len(path)-len(r.URL.RawQuery)-1]
+		ruri = ruri[:len(ruri)-len(r.URL.RawQuery)-1]
 	}
-	slash := strings.HasSuffix(path, "/")
-	path = filepath.Clean(path)
-	if path != "/" && slash {
-		path += "/"
+	slash := strings.HasSuffix(ruri, "/")
+	ruri = path.Clean(ruri)
+	if ruri != "/" && slash {
+		ruri += "/"
 	}
-	w.Write([]byte(path))
+	w.Write([]byte(ruri))
 }
 
 func (s *Service) writeRequest(w io.Writer, r *http.Request) {
