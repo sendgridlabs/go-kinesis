@@ -1,4 +1,4 @@
-// Package provide GOlang API for http://aws.amazon.com/kinesis/
+// Package kinesis provide GOlang API for http://aws.amazon.com/kinesis/
 package kinesis
 
 import (
@@ -21,9 +21,12 @@ type Region struct {
 	Name string
 }
 
-var USEast = Region{"us-east-1"}
-var USWest2 = Region{"us-west-2"}
-var EUWest = Region{"eu-west-1"}
+var (
+	USEast    = Region{"us-east-1"}
+	USWest2   = Region{"us-west-2"}
+	EUWest    = Region{"eu-west-1"}
+	EUCentral = Region{"eu-central-1"}
+)
 
 // Structure for kinesis client
 type Kinesis struct {
