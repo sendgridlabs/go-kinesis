@@ -46,13 +46,9 @@ type KinesisClient interface {
 	SplitShard(args *RequestArgs) error
 }
 
-// Initialize new client for AWS Kinesis
-func New(access_key string, secret_key string, region Region) *Kinesis {
-	keys := &Auth{
-		AccessKey: access_key,
-		SecretKey: secret_key,
-	}
-	return &Kinesis{client: NewClient(keys), Version: "20131202", Region: GetRegion(region)}
+// New returns an initialized AWS Kinesis client
+func New(auth *Auth, region Region) *Kinesis {
+	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region)}
 }
 
 // Create params object for request
