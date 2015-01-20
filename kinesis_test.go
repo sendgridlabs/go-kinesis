@@ -10,21 +10,21 @@ func TestInterfaceIsImplemented(t *testing.T) {
 		SecretKey: "BAD_SECRET_KEY",
 	}
 
-	client = New(auth, USEast)
+	client = New(auth, USEast1)
 	if client == nil {
 		t.Error("Client is nil")
 	}
 }
 
 func TestRegions(t *testing.T) {
-	if EUWest.Name != "eu-west-1" {
-		t.Errorf("%q != %q", EUWest.Name, "eu-west-1")
+	if EUWest1.Name != "eu-west-1" {
+		t.Errorf("%q != %q", EUWest1.Name, "eu-west-1")
 	}
 	if USWest2.Name != "us-west-2" {
 		t.Errorf("%q != %q", USWest2.Name, "us-west-2")
 	}
-	if USEast.Name != "us-east-1" {
-		t.Errorf("%q != %q", USEast.Name, "us-east-1")
+	if USEast1.Name != "us-east-1" {
+		t.Errorf("%q != %q", USEast1.Name, "us-east-1")
 	}
 }
 

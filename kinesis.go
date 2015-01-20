@@ -13,19 +13,20 @@ const (
 	ACTION_KEY = "Action"
 )
 
-var (
-	timeNow = time.Now
-)
-
 type Region struct {
 	Name string
 }
 
 var (
-	USEast    = Region{"us-east-1"}
-	USWest2   = Region{"us-west-2"}
-	EUWest    = Region{"eu-west-1"}
-	EUCentral = Region{"eu-central-1"}
+	USEast1      = Region{"us-east-1"}
+	USWest2      = Region{"us-west-2"}
+	EUWest1      = Region{"eu-west-1"}
+	EUCentral1   = Region{"eu-central-1"}
+	APSouthEast1 = Region{"ap-southeast-1"}
+	APSouthEast2 = Region{"ap-southeast-2"}
+	APNortheast1 = Region{"ap-northeast-1"}
+
+	timeNow = time.Now
 )
 
 // Structure for kinesis client
