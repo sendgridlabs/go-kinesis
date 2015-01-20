@@ -1,4 +1,4 @@
-// Package provide GOlang API for http://aws.amazon.com/kinesis/
+// Package kinesis provide GOlang API for http://aws.amazon.com/kinesis/
 package kinesis
 
 import (
@@ -21,9 +21,12 @@ type Region struct {
 	Name string
 }
 
-var USEast = Region{"us-east-1"}
-var USWest2 = Region{"us-west-2"}
-var EUWest = Region{"eu-west-1"}
+var (
+	USEast    = Region{"us-east-1"}
+	USWest2   = Region{"us-west-2"}
+	EUWest    = Region{"eu-west-1"}
+	EUCentral = Region{"eu-central-1"}
+)
 
 // Structure for kinesis client
 type Kinesis struct {
@@ -46,13 +49,9 @@ type KinesisClient interface {
 	SplitShard(args *RequestArgs) error
 }
 
-// Initialize new client for AWS Kinesis
-func New(access_key string, secret_key string, region Region) *Kinesis {
-	keys := &Auth{
-		AccessKey: access_key,
-		SecretKey: secret_key,
-	}
-	return &Kinesis{client: NewClient(keys), Version: "20131202", Region: GetRegion(region)}
+// New returns an initialized AWS Kinesis client
+func New(auth *Auth, region Region) *Kinesis {
+	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region)}
 }
 
 // Create params object for request
