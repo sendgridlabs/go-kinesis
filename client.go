@@ -42,7 +42,7 @@ type Client struct {
 // NewAuth returns a new Auth object whose members (AccessKey, SecretKey, etc)
 // have been initialized by inspecting the environment or querying the AWS
 // metadata server (in that order).
-func NewAuth() (auth *Auth) {
+func NewAuth() (auth Auth) {
 	// first try grabbing the credentials from the environment
 	if auth.AccessKey == "" || auth.SecretKey == "" {
 		auth.InferCredentialsFromEnv()
