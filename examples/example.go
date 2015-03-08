@@ -20,6 +20,10 @@ func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
 		args = kinesis.NewArgs()
 		args.Add("ShardIterator", shardIterator)
 		resp11, err := ksis.GetRecords(args)
+		if err != nil {
+			time.Sleep(1000 * time.Millisecond)
+			continue
+		}
 
 		if len(resp11.Records) > 0 {
 			fmt.Printf("GetRecords Data BEGIN\n")
@@ -33,6 +37,7 @@ func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
 		}
 
 		shardIterator = resp11.NextShardIterator
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
