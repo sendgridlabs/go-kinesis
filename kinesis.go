@@ -104,6 +104,7 @@ func (err *Error) Error() string {
 }
 
 type jsonErrors struct {
+	Code    string `json:"__type"`
 	Message string
 }
 
@@ -113,6 +114,7 @@ func buildError(r *http.Response) error {
 
 	var err Error
 	err.Message = errors.Message
+	err.Code = errors.Code
 	err.StatusCode = r.StatusCode
 	if err.Message == "" {
 		err.Message = r.Status
