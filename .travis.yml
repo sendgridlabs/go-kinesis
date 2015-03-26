@@ -1,12 +1,16 @@
 language: go
-install:
+
+before_install:
   - npm install -g kinesalite
-script:
+
+before_script:
   - kinesalite --createStreamMs 5 --deleteStreamMs 5 &
-  - go test
-  - killall node
+
+script: go test
+
 notifications:
   email: false
+
 branches:
   only:
     - master
