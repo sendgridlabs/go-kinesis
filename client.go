@@ -141,7 +141,10 @@ func (c *Client) client() *http.Client {
 
 // Do some request, but sign it before sending
 func (c *Client) Do(req *http.Request) (resp *http.Response, err error) {
-	Sign(c.Auth, req)
+	err = Sign(c.Auth, req)
+	if err != nil {
+		return nil, err
+	}
 
 	if !c.Auth.Expiry.IsZero() {
 		if time.Now().After(c.Auth.Expiry) {

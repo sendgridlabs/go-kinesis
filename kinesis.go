@@ -31,9 +31,10 @@ var (
 
 // Structure for kinesis client
 type Kinesis struct {
-	client  *Client
-	Region  string
-	Version string
+	client   *Client
+	endpoint string
+	Region   string
+	Version  string
 }
 
 // Interface implemented by Kinesis
@@ -50,9 +51,19 @@ type KinesisClient interface {
 	SplitShard(args *RequestArgs) error
 }
 
-// New returns an initialized AWS Kinesis client
+// New returns an initialized AWS Kinesis client using the canonical live “production” endpoint
+// for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com
 func New(auth *Auth, region Region) *Kinesis {
-	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region)}
+	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
+	return NewWithEndpoint(auth, region, endpoint)
+}
+
+// NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
+// This is generally useful for testing, so a local Kinesis server can be used.
+func NewWithEndpoint(auth *Auth, region Region, endpoint string) *Kinesis {
+	// TODO: remove trailing slash on endpoint if there is one? does it matter?
+	// TODO: validate endpoint somehow?
+	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
 }
 
 // Create params object for request
@@ -115,7 +126,7 @@ func buildError(r *http.Response) error {
 	err.Message = errors.Message
 	err.StatusCode = r.StatusCode
 	if err.Message == "" {
-		err.Message = r.Status
+		err.Message = fmt.Sprintf("%s\n%s", r.Status, r.Body)
 	}
 	return &err
 }
@@ -130,7 +141,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	// request
 	request, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("https://kinesis.%s.amazonaws.com", kinesis.Region),
+		kinesis.endpoint,
 		bytes.NewReader(jsonData),
 	)
 
