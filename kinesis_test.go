@@ -92,7 +92,8 @@ func TestCreateStream(t *testing.T) {
 	}
 }
 
-func TestPutRecord(t *testing.T) {
+// Older, lower-level way to use PutRecord
+func TestPutRecordWithAddData(t *testing.T) {
 	auth := &Auth{
 		AccessKey: "BAD_ACCESS_KEY",
 		SecretKey: "BAD_SECRET_KEY",
@@ -113,6 +114,41 @@ func TestPutRecord(t *testing.T) {
 	args.Add("PartitionKey", "key-1")
 
 	resp, err := client.PutRecord(args)
+	if resp == nil {
+		t.Error("resp == nil")
+	}
+	if err != nil {
+		t.Errorf("%q != nil", err)
+	}
+
+	client.DeleteStream(streamName)
+	err = waitForStreamDeletion(client, streamName)
+	if err != nil {
+		t.Errorf("%q != nil", err)
+	}
+}
+
+// Newer, higher-level way to use PutRecord
+func TestPutRecordWithAddRecord(t *testing.T) {
+	auth := &Auth{
+		AccessKey: "BAD_ACCESS_KEY",
+		SecretKey: "BAD_SECRET_KEY",
+	}
+
+	client := NewWithEndpoint(auth, USEast1, localEndpoint)
+
+	streamName := "pizza"
+
+	err := createStream(client, streamName, 1)
+	if err != nil {
+		t.Errorf("%q != nil", err)
+	}
+
+	args := NewArgs()
+	args.Add("StreamName", streamName)
+	args.AddRecord([]byte("The cheese is old and moldy, where is the bathroom?"), "key-1")
+	resp, err := client.PutRecord(args)
+
 	if resp == nil {
 		t.Error("resp == nil")
 	}

@@ -4,6 +4,7 @@ package kinesis
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -76,7 +77,7 @@ func makeParams(action string) map[string]string {
 // RequestArgs store params for request
 type RequestArgs struct {
 	params  map[string]interface{}
-	Records []PutRecordsRecord
+	Records []RecordToPut
 }
 
 // NewFilter creates a new Filter.
@@ -342,10 +343,25 @@ type PutRecordResp struct {
 	ShardId        string
 }
 
-// PutRecord puts a data record into an Amazon Kinesis stream from a producer
-// more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html
+// PutRecord puts a data record into an Amazon Kinesis stream from a producer.
+// args must contain a single record added with AddRecord.
+// More info: http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html
 func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err error) {
 	params := makeParams("PutRecord")
+
+	if _, ok := args.params["Data"] ; !ok && len(args.Records) == 0 {
+		return nil, errors.New("PutRecord requires its args param to contain a record added with either AddRecord or AddData.")
+	} else if ok && len(args.Records) > 0 {
+		return nil, errors.New("PutRecord requires its args param to contain a record added with either AddRecord or AddData but not both.")
+	} else if len(args.Records) > 1 {
+		return nil, errors.New("PutRecord does not support more than one record.")
+	}
+
+	if len(args.Records) > 0 {
+		args.AddData(args.Records[0].Data)
+		args.Add("PartitionKey", args.Records[0].PartitionKey)
+	}
+
 	resp = &PutRecordResp{}
 	err = kinesis.query(params, args.params, resp)
 	if err != nil {
@@ -384,15 +400,15 @@ type PutRecordsRespRecord struct {
 
 // Add data and partition for sending multiple Records to Kinesis in one API call
 func (f *RequestArgs) AddRecord(value []byte, partitionKey string) {
-	r := PutRecordsRecord{
+	r := RecordToPut{
 		Data:         value,
 		PartitionKey: partitionKey,
 	}
 	f.Records = append(f.Records, r)
 }
 
-// PutRecordsRecord stores the Data and PartitionKey for batch calls to Kinesis API
-type PutRecordsRecord struct {
+// RecordToPut stores the Data and PartitionKey for PutRecord or PutRecords calls to Kinesis API
+type RecordToPut struct {
 	Data         []byte
 	PartitionKey string
 }
