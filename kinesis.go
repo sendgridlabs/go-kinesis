@@ -77,7 +77,7 @@ func makeParams(action string) map[string]string {
 // RequestArgs store params for request
 type RequestArgs struct {
 	params  map[string]interface{}
-	Records []RecordToPut
+	Records []Record
 }
 
 // NewFilter creates a new Filter.
@@ -400,15 +400,15 @@ type PutRecordsRespRecord struct {
 
 // Add data and partition for sending multiple Records to Kinesis in one API call
 func (f *RequestArgs) AddRecord(value []byte, partitionKey string) {
-	r := RecordToPut{
+	r := Record{
 		Data:         value,
 		PartitionKey: partitionKey,
 	}
 	f.Records = append(f.Records, r)
 }
 
-// RecordToPut stores the Data and PartitionKey for PutRecord or PutRecords calls to Kinesis API
-type RecordToPut struct {
+// Record stores the Data and PartitionKey for PutRecord or PutRecords calls to Kinesis API
+type Record struct {
 	Data         []byte
 	PartitionKey string
 }
