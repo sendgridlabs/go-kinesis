@@ -349,7 +349,7 @@ type PutRecordResp struct {
 func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err error) {
 	params := makeParams("PutRecord")
 
-	if _, ok := args.params["Data"] ; !ok && len(args.Records) == 0 {
+	if _, ok := args.params["Data"]; !ok && len(args.Records) == 0 {
 		return nil, errors.New("PutRecord requires its args param to contain a record added with either AddRecord or AddData.")
 	} else if ok && len(args.Records) > 0 {
 		return nil, errors.New("PutRecord requires its args param to contain a record added with either AddRecord or AddData but not both.")
