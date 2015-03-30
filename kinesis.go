@@ -122,7 +122,10 @@ type jsonErrors struct {
 func buildError(r *http.Response) error {
 	// Reading the body into a []byte because we might need to put it into an error
 	// message after having the JSON decoding fail to produce a message.
-	body, _ := ioutil.ReadAll(r.Body)
+	body, ioerr := ioutil.ReadAll(r.Body)
+	if ioerr != nil {
+		return fmt.Errorf("Could not read response body: %s", ioerr)
+	}
 
 	errors := jsonErrors{}
 	json.NewDecoder(bytes.NewReader(body)).Decode(&errors)
