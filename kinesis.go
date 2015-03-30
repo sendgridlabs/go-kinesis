@@ -131,7 +131,7 @@ func buildError(r *http.Response) error {
 	err.Message = errors.Message
 	err.StatusCode = r.StatusCode
 	if err.Message == "" {
-		err.Message = fmt.Sprintf("%s\n%s", r.Status, body)
+		err.Message = fmt.Sprintf("%s: %s", r.Status, body)
 	}
 	return &err
 }
