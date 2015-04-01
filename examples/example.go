@@ -81,8 +81,9 @@ func main() {
 	for i := 0; i < 10; i++ {
 		args = kinesis.NewArgs()
 		args.Add("StreamName", streamName)
-		args.AddData([]byte(fmt.Sprintf("Hello AWS Kinesis %d", i)))
-		args.Add("PartitionKey", fmt.Sprintf("partitionKey-%d", i))
+		data := []byte(fmt.Sprintf("Hello AWS Kinesis %d", i))
+		partitionKey := fmt.Sprintf("partitionKey-%d", i)
+		args.AddRecord(data, partitionKey)
 		resp4, err := ksis.PutRecord(args)
 		if err != nil {
 			fmt.Printf("PutRecord err: %v\n", err)
