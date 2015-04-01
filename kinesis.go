@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -120,14 +121,21 @@ type jsonErrors struct {
 }
 
 func buildError(r *http.Response) error {
+	// Reading the body into a []byte because we might need to put it into an error
+	// message after having the JSON decoding fail to produce a message.
+	body, ioerr := ioutil.ReadAll(r.Body)
+	if ioerr != nil {
+		return fmt.Errorf("Could not read response body: %s", ioerr)
+	}
+
 	errors := jsonErrors{}
-	json.NewDecoder(r.Body).Decode(&errors)
+	json.NewDecoder(bytes.NewReader(body)).Decode(&errors)
 
 	var err Error
 	err.Message = errors.Message
 	err.StatusCode = r.StatusCode
 	if err.Message == "" {
-		err.Message = fmt.Sprintf("%s\n%s", r.Status, r.Body)
+		err.Message = fmt.Sprintf("%s: %s", r.Status, body)
 	}
 	return &err
 }
