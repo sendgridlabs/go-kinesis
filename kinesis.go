@@ -66,7 +66,7 @@ func New(auth *Auth, region Region) *Kinesis {
 func NewWithTimeout(auth *Auth, region Region, timeout time.Duration) *Kinesis {
 	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
 	client := &Client{Auth: auth, Client: &http.Client{Timeout: timeout}}
-	return &Kinesis{client: client, Region: GetRegion(region), endpoint: endpoint}
+	return &Kinesis{client: client, Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
 }
 
 // NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
