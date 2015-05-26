@@ -23,17 +23,6 @@ const (
 
 var lf = []byte{'\n'}
 
-// Sign API request by
-// http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
-
-func (k *Auth) sign(s *Service, t time.Time) []byte {
-	h := ghmac([]byte("AWS4"+k.SecretKey), []byte(t.Format(iSO8601BasicFormatShort)))
-	h = ghmac(h, []byte(s.Region))
-	h = ghmac(h, []byte(s.Name))
-	h = ghmac(h, []byte(AWS4_URL))
-	return h
-}
-
 // Service represents an AWS-compatible service.
 type Service struct {
 	// Name is the name of the service being used (i.e. iam, etc)
@@ -73,7 +62,7 @@ func (s *Service) Sign(authKeys *Auth, r *http.Request) error {
 	s.writeStringToSign(h, t, r)
 
 	auth := bytes.NewBufferString("AWS4-HMAC-SHA256 ")
-	auth.Write([]byte("Credential=" + authKeys.AccessKey + "/" + s.creds(t)))
+	auth.Write([]byte("Credential=" + authKeys.GetAccessKey() + "/" + s.creds(t)))
 	auth.Write([]byte{',', ' '})
 	auth.Write([]byte("SignedHeaders="))
 	s.writeHeaderList(auth, r)

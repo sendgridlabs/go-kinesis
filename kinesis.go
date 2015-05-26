@@ -8,15 +8,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
 const (
-	ACTION_KEY = "Action"
+	ACTION_KEY      = "Action"
+	REGION_ENV_NAME = "AWS_REGION_NAME"
 )
 
 type Region struct {
 	Name string
+}
+
+// GetRegion returns the region name string
+func GetRegion(region Region) string {
+	if region.Name == "" {
+		return os.Getenv(REGION_ENV_NAME)
+	}
+	return region.Name
 }
 
 var (
@@ -65,7 +75,8 @@ func New(auth *Auth, region Region) *Kinesis {
 // when Kinesis doesn't respond within the specified timeout
 func NewWithTimeout(auth *Auth, region Region, timeout time.Duration) *Kinesis {
 	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
-	client := &Client{Auth: auth, Client: &http.Client{Timeout: timeout}}
+	httpClient := &http.Client{Timeout: timeout}
+	client := NewClientWithHTTPClient(auth, httpClient)
 	return &Kinesis{client: client, Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
 }
 
