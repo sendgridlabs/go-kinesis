@@ -33,7 +33,7 @@ func TestSign(t *testing.T) {
 
 	for _, data := range testSignFactoryData {
 		request.Header.Set("Date", data.DateHeader)
-		err = Sign(&Auth{AccessKey: data.AWS_KEY, SecretKey: data.AWS_SECRET}, request)
+		err = Sign(NewAuth(data.AWS_KEY, data.AWS_SECRET), request)
 		if err != nil {
 			t.Errorf("Error on sign (%v)", err)
 			continue

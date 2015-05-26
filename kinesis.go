@@ -8,15 +8,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
 const (
-	ACTION_KEY = "Action"
+	ACTION_KEY      = "Action"
+	REGION_ENV_NAME = "AWS_REGION_NAME"
 )
 
 type Region struct {
 	Name string
+}
+
+// GetRegion returns the region name string
+func GetRegion(region Region) string {
+	if region.Name == "" {
+		return os.Getenv(REGION_ENV_NAME)
+	}
+	return region.Name
 }
 
 var (
@@ -55,7 +65,7 @@ type KinesisClient interface {
 
 // New returns an initialized AWS Kinesis client using the canonical live “production” endpoint
 // for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com
-func New(auth *Auth, region Region) *Kinesis {
+func New(auth Auth, region Region) *Kinesis {
 	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
 	return NewWithEndpoint(auth, region, endpoint)
 }
@@ -63,15 +73,16 @@ func New(auth *Auth, region Region) *Kinesis {
 // NewWithTimeout returns an initialized AWS Kinesis client using the canonical live “production” endpoint
 // for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the added capability of timing out
 // when Kinesis doesn't respond within the specified timeout
-func NewWithTimeout(auth *Auth, region Region, timeout time.Duration) *Kinesis {
+func NewWithTimeout(auth Auth, region Region, timeout time.Duration) *Kinesis {
 	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
-	client := &Client{Auth: auth, Client: &http.Client{Timeout: timeout}}
+	httpClient := &http.Client{Timeout: timeout}
+	client := NewClientWithHTTPClient(auth, httpClient)
 	return &Kinesis{client: client, Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
 }
 
 // NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
 // This is generally useful for testing, so a local Kinesis server can be used.
-func NewWithEndpoint(auth *Auth, region Region, endpoint string) *Kinesis {
+func NewWithEndpoint(auth Auth, region Region, endpoint string) *Kinesis {
 	// TODO: remove trailing slash on endpoint if there is one? does it matter?
 	// TODO: validate endpoint somehow?
 	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region), endpoint: endpoint}

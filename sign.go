@@ -23,17 +23,6 @@ const (
 
 var lf = []byte{'\n'}
 
-// Sign API request by
-// http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
-
-func (k *Auth) sign(s *Service, t time.Time) []byte {
-	h := ghmac([]byte("AWS4"+k.SecretKey), []byte(t.Format(iSO8601BasicFormatShort)))
-	h = ghmac(h, []byte(s.Region))
-	h = ghmac(h, []byte(s.Name))
-	h = ghmac(h, []byte(AWS4_URL))
-	return h
-}
-
 // Service represents an AWS-compatible service.
 type Service struct {
 	// Name is the name of the service being used (i.e. iam, etc)
@@ -44,7 +33,7 @@ type Service struct {
 }
 
 // Sign signs a request with a Service derived from r.Host
-func Sign(authKeys *Auth, r *http.Request) error {
+func Sign(authKeys Auth, r *http.Request) error {
 	parts := strings.Split(r.Host, ".")
 	if len(parts) < 4 {
 		return fmt.Errorf("Invalid AWS Endpoint: %s", r.Host)
@@ -56,7 +45,7 @@ func Sign(authKeys *Auth, r *http.Request) error {
 }
 
 // Sign signs an HTTP request with the given AWS keys for use on service s.
-func (s *Service) Sign(authKeys *Auth, r *http.Request) error {
+func (s *Service) Sign(authKeys Auth, r *http.Request) error {
 	date := r.Header.Get("Date")
 	t := time.Now().UTC()
 	if date != "" {
@@ -68,12 +57,12 @@ func (s *Service) Sign(authKeys *Auth, r *http.Request) error {
 	}
 	r.Header.Set("Date", t.Format(iSO8601BasicFormat))
 
-	k := authKeys.sign(s, t)
+	k := authKeys.Sign(s, t)
 	h := hmac.New(sha256.New, k)
 	s.writeStringToSign(h, t, r)
 
 	auth := bytes.NewBufferString("AWS4-HMAC-SHA256 ")
-	auth.Write([]byte("Credential=" + authKeys.AccessKey + "/" + s.creds(t)))
+	auth.Write([]byte("Credential=" + authKeys.GetAccessKey() + "/" + s.creds(t)))
 	auth.Write([]byte{',', ' '})
 	auth.Write([]byte("SignedHeaders="))
 	s.writeHeaderList(auth, r)

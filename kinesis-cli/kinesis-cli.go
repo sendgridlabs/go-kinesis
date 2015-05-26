@@ -237,9 +237,8 @@ func bigIntFromStr(s string, base int) *big.Int {
 //
 
 func newClient() kinesis.KinesisClient {
-	// NOTE: kinesis.client.go sets auth from env when empty.
-	auth := kinesis.NewAuth()
-	return kinesis.New(&auth, kinesis.Region{})
+	auth, _ := kinesis.NewAuthFromEnv()
+	return kinesis.New(auth, kinesis.Region{})
 }
 
 func askForShardStartHash(streamName, shardId string) string {
