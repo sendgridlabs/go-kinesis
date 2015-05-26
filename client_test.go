@@ -5,19 +5,17 @@ import (
 	"testing"
 )
 
-func TestInferCredentialsFromEnv(t *testing.T) {
+func TestNewAuthFromEnv(t *testing.T) {
 	os.Setenv(ACCESS_ENV_KEY, "asdf")
 	os.Setenv(SECRET_ENV_KEY, "asdf")
 
-	auth := Auth{}
+	auth, _ := NewAuthFromEnv()
 
-	auth.InferCredentialsFromEnv()
-
-	if auth.AccessKey != "asdf" {
+	if auth.GetAccessKey() != "asdf" {
 		t.Error("Expected AccessKey to be inferred as \"asdf\"")
 	}
 
-	if auth.SecretKey != "asdf" {
+	if auth.GetSecretKey() != "asdf" {
 		t.Error("Expected SecretKey to be inferred as \"asdf\"")
 	}
 
