@@ -43,13 +43,17 @@ func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
 
 func main() {
 	fmt.Println("Begin")
+	var (
+		err  error
+		auth kinesis.Auth
+	)
 
 	streamName := "test"
 	// set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY AWS_REGION_NAME
-	auth := kinesis.NewAuth()
-	ksis := kinesis.New(&auth, kinesis.Region{})
+	auth, err = kinesis.NewAuthFromEnv()
+	ksis := kinesis.New(auth, kinesis.Region{})
 
-	err := ksis.CreateStream(streamName, 2)
+	err = ksis.CreateStream(streamName, 2)
 	if err != nil {
 		fmt.Printf("CreateStream ERROR: %v\n", err)
 	}
