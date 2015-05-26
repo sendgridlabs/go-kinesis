@@ -10,7 +10,7 @@ const AWS_SECURITY_TOKEN_HEADER = "X-Amz-Security-Token"
 // Client is like http.Client, but signs all requests using Auth.
 type Client struct {
 	// Auth holds the credentials for this client instance
-	auth *Auth
+	auth Auth
 	// The http client to make requests with. If nil, http.DefaultClient is used.
 	client *http.Client
 }
@@ -20,11 +20,11 @@ type Client struct {
 //
 // This function assumes the Auth object has been sanely initialized. If you
 // wish to infer auth credentials from the environment, refer to NewAuth
-func NewClient(auth *Auth) *Client {
+func NewClient(auth Auth) *Client {
 	return &Client{auth: auth, client: http.DefaultClient}
 }
 
-func NewClientWithHTTPClient(auth *Auth, httpClient *http.Client) *Client {
+func NewClientWithHTTPClient(auth Auth, httpClient *http.Client) *Client {
 	return &Client{auth: auth, client: httpClient}
 }
 

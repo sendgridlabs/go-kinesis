@@ -20,25 +20,36 @@ const (
 	AWS_IAM_CREDS_URL   = "http://" + AWS_METADATA_SERVER + AWS_IAM_CREDS_PATH
 )
 
-// Auth store information about AWS Credentials
-type Auth struct {
-	// AccessKey, SecretKey are the standard AWS auth credentials
+// Auth interface for authentication credentials and information
+type Auth interface {
+	GetToken() string
+	GetExpiration() time.Time
+	GetSecretKey() string
+	GetAccessKey() string
+	HasExpiration() bool
+	Renew() error
+	Sign(*Service, time.Time) []byte
+}
+
+type auth struct {
+	// accessKey, secretKey are the standard AWS auth credentials
 	accessKey, secretKey, token string
-	// Expiry indicates the time at which these credentials expire. If this is set
+
+	// expiry indicates the time at which these credentials expire. If this is set
 	// to anything other than the zero value, indicates that the credentials are
 	// temporary (and probably fetched from an IAM role from the metadata server)
 	expiry time.Time
 }
 
-func NewAuth(accessKey, secretKey string) *Auth {
-	return &Auth{
+func NewAuth(accessKey, secretKey string) Auth {
+	return &auth{
 		accessKey: accessKey,
 		secretKey: secretKey,
 	}
 }
 
 // NewAuthFromEnv retrieves auth credentials from environment vars
-func NewAuthFromEnv() (*Auth, error) {
+func NewAuthFromEnv() (Auth, error) {
 	accessKey := os.Getenv(ACCESS_ENV_KEY)
 	secretKey := os.Getenv(SECRET_ENV_KEY)
 	if accessKey == "" {
@@ -57,8 +68,8 @@ func NewAuthFromEnv() (*Auth, error) {
 //
 // TODO: specify custom network (connect, read) timeouts, else this will block
 // for the default timeout durations.
-func NewAuthFromMetadata() (*Auth, error) {
-	auth := &Auth{}
+func NewAuthFromMetadata() (Auth, error) {
+	auth := &auth{}
 	if err := auth.Renew(); err != nil {
 		return nil, err
 	}
@@ -66,32 +77,32 @@ func NewAuthFromMetadata() (*Auth, error) {
 }
 
 // HasExpiration returns true if the expiration time is non-zero and false otherwise
-func (a *Auth) HasExpiration() bool {
+func (a *auth) HasExpiration() bool {
 	return !a.expiry.IsZero()
 }
 
 // GetExpiration retrieves the current expiration time
-func (a *Auth) GetExpiration() time.Time {
+func (a *auth) GetExpiration() time.Time {
 	return a.expiry
 }
 
 // GetToken returns the token
-func (a *Auth) GetToken() string {
+func (a *auth) GetToken() string {
 	return a.token
 }
 
 // GetSecretKey returns the secret key
-func (a *Auth) GetSecretKey() string {
+func (a *auth) GetSecretKey() string {
 	return a.secretKey
 }
 
 // GetAccessKey returns the access key
-func (a *Auth) GetAccessKey() string {
+func (a *auth) GetAccessKey() string {
 	return a.accessKey
 }
 
 // Renew retrieves a new token and mutates it on an instance of the Auth struct
-func (a *Auth) Renew() error {
+func (a *auth) Renew() error {
 	role, err := retrieveIAMRole()
 	if err != nil {
 		return err
@@ -116,7 +127,7 @@ func (a *Auth) Renew() error {
 // Sign API request by
 // http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
 
-func (a *Auth) sign(s *Service, t time.Time) []byte {
+func (a *auth) Sign(s *Service, t time.Time) []byte {
 	h := ghmac([]byte("AWS4"+a.GetSecretKey()), []byte(t.Format(iSO8601BasicFormatShort)))
 	h = ghmac(h, []byte(s.Region))
 	h = ghmac(h, []byte(s.Name))

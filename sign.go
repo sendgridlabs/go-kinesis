@@ -33,7 +33,7 @@ type Service struct {
 }
 
 // Sign signs a request with a Service derived from r.Host
-func Sign(authKeys *Auth, r *http.Request) error {
+func Sign(authKeys Auth, r *http.Request) error {
 	parts := strings.Split(r.Host, ".")
 	if len(parts) < 4 {
 		return fmt.Errorf("Invalid AWS Endpoint: %s", r.Host)
@@ -45,7 +45,7 @@ func Sign(authKeys *Auth, r *http.Request) error {
 }
 
 // Sign signs an HTTP request with the given AWS keys for use on service s.
-func (s *Service) Sign(authKeys *Auth, r *http.Request) error {
+func (s *Service) Sign(authKeys Auth, r *http.Request) error {
 	date := r.Header.Get("Date")
 	t := time.Now().UTC()
 	if date != "" {
@@ -57,7 +57,7 @@ func (s *Service) Sign(authKeys *Auth, r *http.Request) error {
 	}
 	r.Header.Set("Date", t.Format(iSO8601BasicFormat))
 
-	k := authKeys.sign(s, t)
+	k := authKeys.Sign(s, t)
 	h := hmac.New(sha256.New, k)
 	s.writeStringToSign(h, t, r)
 
