@@ -144,7 +144,7 @@ func TestPutRecordWithAddRecord(t *testing.T) {
 // waitForStreamStatus will poll for a stream status repeatedly, once every MS, for up to 1000 MS,
 // blocking until the stream has the desired status. It will return an error if the stream never
 // achieves the desired status. If a stream doesn’t exist then an error will be returned.
-func waitForStreamStatus(client *Kinesis, streamName string, statusToAwait string) error {
+func waitForStreamStatus(client KinesisClient, streamName string, statusToAwait string) error {
 	args := NewArgs()
 	args.Add("StreamName", streamName)
 	var resp3 *DescribeStreamResp
@@ -177,7 +177,7 @@ func waitForStreamStatus(client *Kinesis, streamName string, statusToAwait strin
 // waitForStreamDeletion will poll for a stream status repeatedly, once every MS, for up to 1000 MS,
 // blocking until the stream has been deleted. It will return an error if the stream is never deleted
 // or some other error occurs. If it succeeds then the return value will be nil.
-func waitForStreamDeletion(client *Kinesis, streamName string) error {
+func waitForStreamDeletion(client KinesisClient, streamName string) error {
 	err := waitForStreamStatus(client, streamName, "FOO")
 	if !strings.Contains(err.Error(), "not found") {
 		return err
@@ -186,7 +186,7 @@ func waitForStreamDeletion(client *Kinesis, streamName string) error {
 }
 
 // helper
-func createStream(client *Kinesis, streamName string, partitions int) error {
+func createStream(client KinesisClient, streamName string, partitions int) error {
 	err := client.CreateStream(streamName, partitions)
 	if err != nil {
 		return err

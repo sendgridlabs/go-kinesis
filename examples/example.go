@@ -8,7 +8,7 @@ import (
 	kinesis "github.com/sendgridlabs/go-kinesis"
 )
 
-func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
+func getRecords(ksis kinesis.KinesisClient, streamName, ShardId string) {
 	args := kinesis.NewArgs()
 	args.Add("StreamName", streamName)
 	args.Add("ShardId", ShardId)

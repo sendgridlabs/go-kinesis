@@ -33,7 +33,7 @@ func NewRegionFromEnv() string {
 }
 
 // Structure for kinesis client
-type Kinesis struct {
+type kinesis struct {
 	client   *Client
 	endpoint string
 	region   string
@@ -56,7 +56,7 @@ type KinesisClient interface {
 
 // New returns an initialized AWS Kinesis client using the canonical live “production” endpoint
 // for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com
-func New(auth Auth, region string) *Kinesis {
+func New(auth Auth, region string) KinesisClient {
 	endpoint := fmt.Sprintf(kinesisURL, region)
 	return NewWithEndpoint(auth, region, endpoint)
 }
@@ -64,17 +64,17 @@ func New(auth Auth, region string) *Kinesis {
 // NewWithClient returns an initialized AWS Kinesis client using the canonical live “production” endpoint
 // for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the ability to create a custom client
 // with specific configurations like a timeout
-func NewWithClient(auth Auth, region string, client *Client) *Kinesis {
+func NewWithClient(auth Auth, region string, client *Client) KinesisClient {
 	endpoint := fmt.Sprintf(kinesisURL, region)
-	return &Kinesis{client: client, version: "20131202", region: region, endpoint: endpoint}
+	return &kinesis{client: client, version: "20131202", region: region, endpoint: endpoint}
 }
 
 // NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
 // This is generally useful for testing, so a local Kinesis server can be used.
-func NewWithEndpoint(auth Auth, region string, endpoint string) *Kinesis {
+func NewWithEndpoint(auth Auth, region string, endpoint string) KinesisClient {
 	// TODO: remove trailing slash on endpoint if there is one? does it matter?
 	// TODO: validate endpoint somehow?
-	return &Kinesis{client: NewClient(auth), version: "20131202", region: region, endpoint: endpoint}
+	return &kinesis{client: NewClient(auth), version: "20131202", region: region, endpoint: endpoint}
 }
 
 // Create params object for request
@@ -152,7 +152,7 @@ func buildError(r *http.Response) error {
 }
 
 // Query by AWS API
-func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp interface{}) error {
+func (kinesis *kinesis) query(params map[string]string, data interface{}, resp interface{}) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -195,7 +195,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 // CreateStream adds a new Amazon Kinesis stream to your AWS account
 // StreamName is a name of stream, ShardCount is number of shards
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html
-func (kinesis *Kinesis) CreateStream(StreamName string, ShardCount int) error {
+func (kinesis *kinesis) CreateStream(StreamName string, ShardCount int) error {
 	params := makeParams("CreateStream")
 	requestParams := struct {
 		StreamName string
@@ -214,7 +214,7 @@ func (kinesis *Kinesis) CreateStream(StreamName string, ShardCount int) error {
 // DeleteStream deletes a stream and all of its shards and data from your AWS account
 // StreamName is a name of stream
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_DeleteStream.html
-func (kinesis *Kinesis) DeleteStream(StreamName string) error {
+func (kinesis *kinesis) DeleteStream(StreamName string) error {
 	params := makeParams("DeleteStream")
 	requestParams := struct {
 		StreamName string
@@ -230,7 +230,7 @@ func (kinesis *Kinesis) DeleteStream(StreamName string) error {
 
 // MergeShards merges two adjacent shards in a stream and combines them into a single shard to reduce the stream's capacity to ingest and transport data
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_MergeShards.html
-func (kinesis *Kinesis) MergeShards(args *RequestArgs) error {
+func (kinesis *kinesis) MergeShards(args *RequestArgs) error {
 	params := makeParams("MergeShards")
 	err := kinesis.query(params, args.params, nil)
 	if err != nil {
@@ -241,7 +241,7 @@ func (kinesis *Kinesis) MergeShards(args *RequestArgs) error {
 
 // SplitShard splits a shard into two new shards in the stream, to increase the stream's capacity to ingest and transport data
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_SplitShard.html
-func (kinesis *Kinesis) SplitShard(args *RequestArgs) error {
+func (kinesis *kinesis) SplitShard(args *RequestArgs) error {
 	params := makeParams("SplitShard")
 	err := kinesis.query(params, args.params, nil)
 	if err != nil {
@@ -258,7 +258,7 @@ type ListStreamsResp struct {
 
 // ListStreams returns an array of the names of all the streams that are associated with the AWS account making the ListStreams request
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_ListStreams.html
-func (kinesis *Kinesis) ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error) {
+func (kinesis *kinesis) ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error) {
 	params := makeParams("ListStreams")
 	resp = &ListStreamsResp{}
 	err = kinesis.query(params, args.params, resp)
@@ -300,7 +300,7 @@ type DescribeStreamResp struct {
 // the shard spans, and the IDs of any earlier shards that played in a role in a MergeShards or
 // SplitShard operation that created the shard
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html
-func (kinesis *Kinesis) DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error) {
+func (kinesis *kinesis) DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error) {
 	params := makeParams("DescribeStream")
 	resp = &DescribeStreamResp{}
 	err = kinesis.query(params, args.params, resp)
@@ -317,7 +317,7 @@ type GetShardIteratorResp struct {
 
 // GetShardIterator returns a shard iterator
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html
-func (kinesis *Kinesis) GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error) {
+func (kinesis *kinesis) GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error) {
 	params := makeParams("GetShardIterator")
 	resp = &GetShardIteratorResp{}
 	err = kinesis.query(params, args.params, resp)
@@ -346,7 +346,7 @@ type GetRecordsResp struct {
 
 // GetRecords returns one or more data records from a shard
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html
-func (kinesis *Kinesis) GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error) {
+func (kinesis *kinesis) GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error) {
 	params := makeParams("GetRecords")
 	resp = &GetRecordsResp{}
 	err = kinesis.query(params, args.params, resp)
@@ -365,7 +365,7 @@ type PutRecordResp struct {
 // PutRecord puts a data record into an Amazon Kinesis stream from a producer.
 // args must contain a single record added with AddRecord.
 // More info: http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html
-func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err error) {
+func (kinesis *kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err error) {
 	params := makeParams("PutRecord")
 
 	if _, ok := args.params["Data"]; !ok && len(args.Records) == 0 {
@@ -391,7 +391,7 @@ func (kinesis *Kinesis) PutRecord(args *RequestArgs) (resp *PutRecordResp, err e
 
 // PutRecords puts multiple data records into an Amazon Kinesis stream from a producer
 // more info http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html
-func (kinesis *Kinesis) PutRecords(args *RequestArgs) (resp *PutRecordsResp, err error) {
+func (kinesis *kinesis) PutRecords(args *RequestArgs) (resp *PutRecordsResp, err error) {
 	params := makeParams("PutRecords")
 	resp = &PutRecordsResp{}
 	args.Add("Records", args.Records)
