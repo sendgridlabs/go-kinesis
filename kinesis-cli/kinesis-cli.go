@@ -238,7 +238,7 @@ func bigIntFromStr(s string, base int) *big.Int {
 
 func newClient() kinesis.KinesisClient {
 	auth, _ := kinesis.NewAuthFromEnv()
-	return kinesis.New(auth, kinesis.Region{})
+	return kinesis.New(auth, "")
 }
 
 func askForShardStartHash(streamName, shardId string) string {

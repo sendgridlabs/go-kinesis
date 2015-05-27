@@ -51,7 +51,7 @@ func main() {
 	streamName := "test"
 	// set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY AWS_REGION_NAME
 	auth, err = kinesis.NewAuthFromEnv()
-	ksis := kinesis.New(auth, kinesis.Region{})
+	ksis := kinesis.New(auth, "")
 
 	err = ksis.CreateStream(streamName, 2)
 	if err != nil {
