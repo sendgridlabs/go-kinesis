@@ -62,8 +62,8 @@ func New(auth Auth, region string) *Kinesis {
 }
 
 // NewWithClient returns an initialized AWS Kinesis client using the canonical live “production” endpoint
-// for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the added capability of timing out
-// when Kinesis doesn't respond within the specified timeout
+// for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the ability to create a custom client
+// with specific configurations like a timeout
 func NewWithClient(auth Auth, region string, client *Client) *Kinesis {
 	endpoint := fmt.Sprintf(kinesisURL, region)
 	return &Kinesis{client: client, version: "20131202", region: region, endpoint: endpoint}

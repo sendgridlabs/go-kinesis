@@ -3,6 +3,7 @@ package kinesis
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -21,15 +22,12 @@ func TestInterfaceIsImplemented(t *testing.T) {
 }
 
 func TestRegions(t *testing.T) {
-	if EUWest1.Name != "eu-west-1" {
-		t.Errorf("%q != %q", EUWest1.Name, "eu-west-1")
+	os.Setenv(REGION_ENV_NAME, "REGION_TEST")
+
+	if NewRegionFromEnv() != "REGION_TEST" {
+		t.Errorf("Invalid value read from the %s environment variable", REGION_ENV_NAME)
 	}
-	if USWest2.Name != "us-west-2" {
-		t.Errorf("%q != %q", USWest2.Name, "us-west-2")
-	}
-	if USEast1.Name != "us-east-1" {
-		t.Errorf("%q != %q", USEast1.Name, "us-east-1")
-	}
+	os.Setenv(REGION_ENV_NAME, "")
 }
 
 func TestAddRecord(t *testing.T) {
