@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func TestAuthInterfaceIsImplemented(t *testing.T) {
+	var auth Auth = &AuthCredentials{}
+	if auth == nil {
+		t.Error("Invalid nil auth credentials value")
+	}
+}
+
 func TestGetSecretKey(t *testing.T) {
 	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
 
@@ -22,8 +29,8 @@ func TestGetAccessKey(t *testing.T) {
 }
 
 func TestNewAuthFromEnv(t *testing.T) {
-	os.Setenv(ACCESS_ENV_KEY, "asdf")
-	os.Setenv(SECRET_ENV_KEY, "asdf")
+	os.Setenv(AccessEnvKey, "asdf")
+	os.Setenv(SecretEnvKey, "asdf")
 
 	auth, _ := NewAuthFromEnv()
 
@@ -35,6 +42,6 @@ func TestNewAuthFromEnv(t *testing.T) {
 		t.Error("Expected SecretKey to be inferred as \"asdf\"")
 	}
 
-	os.Setenv(ACCESS_ENV_KEY, "") // Use Unsetenv with go1.4
-	os.Setenv(SECRET_ENV_KEY, "") // Use Unsetenv with go1.4
+	os.Setenv(AccessEnvKey, "") // Use Unsetenv with go1.4
+	os.Setenv(SecretEnvKey, "") // Use Unsetenv with go1.4
 }

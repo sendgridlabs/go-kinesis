@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const AWS_SECURITY_TOKEN_HEADER = "X-Amz-Security-Token"
+const AWSSecurityTokenHeader = "X-Amz-Security-Token"
 
 // Client is like http.Client, but signs all requests using Auth.
 type Client struct {
@@ -24,6 +24,10 @@ func NewClient(auth Auth) *Client {
 	return &Client{auth: auth, client: http.DefaultClient}
 }
 
+// NewClientWithHTTPClient creates a client with a non-default http client
+// ie. a timeout could be set on the HTTP client to timeout if Kinesis doesn't
+// response in a timely manner like after the 5 minute mark where the current
+// shard iterator expires
 func NewClientWithHTTPClient(auth Auth, httpClient *http.Client) *Client {
 	return &Client{auth: auth, client: httpClient}
 }
@@ -42,7 +46,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	if c.auth.GetToken() != "" {
-		req.Header.Add(AWS_SECURITY_TOKEN_HEADER, c.auth.GetToken())
+		req.Header.Add(AWSSecurityTokenHeader, c.auth.GetToken())
 	}
 
 	return c.client.Do(req)

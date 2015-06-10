@@ -11,23 +11,20 @@ import (
 
 const localEndpoint = "http://127.0.0.1:4567"
 
-// Trivial test to make sure that Kinesis implements KinesisClient.
-func TestInterfaceIsImplemented(t *testing.T) {
-	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
-
-	client := New(auth, USEast1)
+func TestKinesisClientInterfaceIsImplemented(t *testing.T) {
+	var client KinesisClient = &Kinesis{}
 	if client == nil {
-		t.Error("Client is nil")
+		t.Error("Invalid nil kinesis client")
 	}
 }
 
 func TestRegions(t *testing.T) {
-	os.Setenv(REGION_ENV_NAME, "REGION_TEST")
+	os.Setenv(RegionEnvName, "REGION_TEST")
 
 	if NewRegionFromEnv() != "REGION_TEST" {
-		t.Errorf("Invalid value read from the %s environment variable", REGION_ENV_NAME)
+		t.Errorf("Invalid value read from the %s environment variable", RegionEnvName)
 	}
-	os.Setenv(REGION_ENV_NAME, "")
+	os.Setenv(RegionEnvName, "")
 }
 
 func TestAddRecord(t *testing.T) {

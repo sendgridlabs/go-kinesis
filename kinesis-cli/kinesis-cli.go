@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	// "github.com/sendgridlabs/go-kinesis"
 	"github.com/sendgridlabs/go-kinesis"
 )
 
@@ -117,14 +118,14 @@ func main() {
 	if len(os.Args) < 2 {
 		die(true, "Error: no command specified.")
 	}
-	if os.Getenv(kinesis.ACCESS_ENV_KEY) == "" ||
-		os.Getenv(kinesis.SECRET_ENV_KEY) == "" {
+	if os.Getenv(kinesis.AccessEnvKey) == "" ||
+		os.Getenv(kinesis.SecretEnvKey) == "" {
 		fmt.Printf("WARNING: %s and/or %s environment variables not set. Will "+
 			"attempt to fetch credentials from metadata server.\n",
-			kinesis.ACCESS_ENV_KEY, kinesis.SECRET_ENV_KEY)
+			kinesis.AccessEnvKey, kinesis.SecretEnvKey)
 	}
-	if os.Getenv(kinesis.REGION_ENV_NAME) == "" {
-		fmt.Printf("WARNING: %s not set.\n", kinesis.REGION_ENV_NAME)
+	if os.Getenv(kinesis.RegionEnvName) == "" {
+		fmt.Printf("WARNING: %s not set.\n", kinesis.RegionEnvName)
 	}
 	switch os.Args[1] {
 	case "create":

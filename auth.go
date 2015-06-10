@@ -12,12 +12,12 @@ import (
 )
 
 const (
-	ACCESS_ENV_KEY = "AWS_ACCESS_KEY"
-	SECRET_ENV_KEY = "AWS_SECRET_KEY"
+	AccessEnvKey = "AWS_ACCESS_KEY"
+	SecretEnvKey = "AWS_SECRET_KEY"
 
-	AWS_METADATA_SERVER = "169.254.169.254"
-	AWS_IAM_CREDS_PATH  = "/latest/meta-data/iam/security-credentials"
-	AWS_IAM_CREDS_URL   = "http://" + AWS_METADATA_SERVER + AWS_IAM_CREDS_PATH
+	AWSMetadataServer = "169.254.169.254"
+	AWSIAMCredsPath   = "/latest/meta-data/iam/security-credentials"
+	AWSIAMCredsURL    = "http://" + AWSMetadataServer + "/" + AWSIAMCredsPath
 )
 
 // Auth interface for authentication credentials and information
@@ -31,7 +31,8 @@ type Auth interface {
 	Sign(*Service, time.Time) []byte
 }
 
-type auth struct {
+// AuthCredentials holds the AWS credentials and metadata
+type AuthCredentials struct {
 	// accessKey, secretKey are the standard AWS auth credentials
 	accessKey, secretKey, token string
 
@@ -41,22 +42,24 @@ type auth struct {
 	expiry time.Time
 }
 
-func NewAuth(accessKey, secretKey string) Auth {
-	return &auth{
+// NewAuth creates a *AuthCredentials struct that adheres to the Auth interface to
+// dynamically retrieve AWS credentials
+func NewAuth(accessKey, secretKey string) *AuthCredentials {
+	return &AuthCredentials{
 		accessKey: accessKey,
 		secretKey: secretKey,
 	}
 }
 
 // NewAuthFromEnv retrieves auth credentials from environment vars
-func NewAuthFromEnv() (Auth, error) {
-	accessKey := os.Getenv(ACCESS_ENV_KEY)
-	secretKey := os.Getenv(SECRET_ENV_KEY)
+func NewAuthFromEnv() (*AuthCredentials, error) {
+	accessKey := os.Getenv(AccessEnvKey)
+	secretKey := os.Getenv(SecretEnvKey)
 	if accessKey == "" {
-		return nil, fmt.Errorf("Unable to retrieve access key from %s env variable", ACCESS_ENV_KEY)
+		return nil, fmt.Errorf("Unable to retrieve access key from %s env variable", AccessEnvKey)
 	}
 	if secretKey == "" {
-		return nil, fmt.Errorf("Unable to retrieve secret key from %s env variable", SECRET_ENV_KEY)
+		return nil, fmt.Errorf("Unable to retrieve secret key from %s env variable", SecretEnvKey)
 	}
 
 	return NewAuth(accessKey, secretKey), nil
@@ -68,8 +71,8 @@ func NewAuthFromEnv() (Auth, error) {
 //
 // TODO: specify custom network (connect, read) timeouts, else this will block
 // for the default timeout durations.
-func NewAuthFromMetadata() (Auth, error) {
-	auth := &auth{}
+func NewAuthFromMetadata() (*AuthCredentials, error) {
+	auth := &AuthCredentials{}
 	if err := auth.Renew(); err != nil {
 		return nil, err
 	}
@@ -77,32 +80,32 @@ func NewAuthFromMetadata() (Auth, error) {
 }
 
 // HasExpiration returns true if the expiration time is non-zero and false otherwise
-func (a *auth) HasExpiration() bool {
+func (a *AuthCredentials) HasExpiration() bool {
 	return !a.expiry.IsZero()
 }
 
 // GetExpiration retrieves the current expiration time
-func (a *auth) GetExpiration() time.Time {
+func (a *AuthCredentials) GetExpiration() time.Time {
 	return a.expiry
 }
 
 // GetToken returns the token
-func (a *auth) GetToken() string {
+func (a *AuthCredentials) GetToken() string {
 	return a.token
 }
 
 // GetSecretKey returns the secret key
-func (a *auth) GetSecretKey() string {
+func (a *AuthCredentials) GetSecretKey() string {
 	return a.secretKey
 }
 
 // GetAccessKey returns the access key
-func (a *auth) GetAccessKey() string {
+func (a *AuthCredentials) GetAccessKey() string {
 	return a.accessKey
 }
 
 // Renew retrieves a new token and mutates it on an instance of the Auth struct
-func (a *auth) Renew() error {
+func (a *AuthCredentials) Renew() error {
 	role, err := retrieveIAMRole()
 	if err != nil {
 		return err
@@ -127,7 +130,7 @@ func (a *auth) Renew() error {
 // Sign API request by
 // http://docs.amazonwebservices.com/general/latest/gr/signature-version-4.html
 
-func (a *auth) Sign(s *Service, t time.Time) []byte {
+func (a *AuthCredentials) Sign(s *Service, t time.Time) []byte {
 	h := ghmac([]byte("AWS4"+a.GetSecretKey()), []byte(t.Format(iSO8601BasicFormatShort)))
 	h = ghmac(h, []byte(s.Region))
 	h = ghmac(h, []byte(s.Name))
@@ -138,7 +141,7 @@ func (a *auth) Sign(s *Service, t time.Time) []byte {
 func retrieveAWSCredentials(role string) (map[string]string, error) {
 	var bodybytes []byte
 	// Retrieve the json for this role
-	resp, err := http.Get(AWS_IAM_CREDS_URL + "/" + role)
+	resp, err := http.Get(fmt.Sprintf("%s/%s", AWSIAMCredsURL, role))
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, err
 	}
@@ -161,7 +164,7 @@ func retrieveAWSCredentials(role string) (map[string]string, error) {
 func retrieveIAMRole() (string, error) {
 	var bodybytes []byte
 
-	resp, err := http.Get(AWS_IAM_CREDS_URL)
+	resp, err := http.Get(AWSIAMCredsURL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return "", err
 	}
