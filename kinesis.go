@@ -9,47 +9,38 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 )
 
 const (
-	ACTION_KEY      = "Action"
-	REGION_ENV_NAME = "AWS_REGION_NAME"
+	ActionKey     = "Action"
+	RegionEnvName = "AWS_REGION_NAME"
+
+	// Regions
+	USEast1      = "us-east-1"
+	USWest2      = "us-west-2"
+	EUWest1      = "eu-west-1"
+	EUCentral1   = "eu-central-1"
+	APSouthEast1 = "ap-southeast-1"
+	APSouthEast2 = "ap-southeast-2"
+	APNortheast1 = "ap-northeast-1"
+
+	kinesisURL = "https://kinesis.%s.amazonaws.com"
 )
 
-type Region struct {
-	Name string
+// NewRegionFromEnv creates a region from the an expected environment variable
+func NewRegionFromEnv() string {
+	return os.Getenv(RegionEnvName)
 }
-
-// GetRegion returns the region name string
-func GetRegion(region Region) string {
-	if region.Name == "" {
-		return os.Getenv(REGION_ENV_NAME)
-	}
-	return region.Name
-}
-
-var (
-	USEast1      = Region{"us-east-1"}
-	USWest2      = Region{"us-west-2"}
-	EUWest1      = Region{"eu-west-1"}
-	EUCentral1   = Region{"eu-central-1"}
-	APSouthEast1 = Region{"ap-southeast-1"}
-	APSouthEast2 = Region{"ap-southeast-2"}
-	APNortheast1 = Region{"ap-northeast-1"}
-
-	timeNow = time.Now
-)
 
 // Structure for kinesis client
 type Kinesis struct {
 	client   *Client
 	endpoint string
-	Region   string
-	Version  string
+	region   string
+	version  string
 }
 
-// Interface implemented by Kinesis
+// KinesisClient interface implemented by Kinesis
 type KinesisClient interface {
 	CreateStream(StreamName string, ShardCount int) error
 	DeleteStream(StreamName string) error
@@ -65,33 +56,31 @@ type KinesisClient interface {
 
 // New returns an initialized AWS Kinesis client using the canonical live “production” endpoint
 // for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com
-func New(auth Auth, region Region) *Kinesis {
-	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
+func New(auth Auth, region string) *Kinesis {
+	endpoint := fmt.Sprintf(kinesisURL, region)
 	return NewWithEndpoint(auth, region, endpoint)
 }
 
-// NewWithTimeout returns an initialized AWS Kinesis client using the canonical live “production” endpoint
-// for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the added capability of timing out
-// when Kinesis doesn't respond within the specified timeout
-func NewWithTimeout(auth Auth, region Region, timeout time.Duration) *Kinesis {
-	endpoint := fmt.Sprintf("https://kinesis.%s.amazonaws.com", GetRegion(region))
-	httpClient := &http.Client{Timeout: timeout}
-	client := NewClientWithHTTPClient(auth, httpClient)
-	return &Kinesis{client: client, Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
+// NewWithClient returns an initialized AWS Kinesis client using the canonical live “production” endpoint
+// for AWS Kinesis, i.e. https://kinesis.{region}.amazonaws.com but with the ability to create a custom client
+// with specific configurations like a timeout
+func NewWithClient(region string, client *Client) *Kinesis {
+	endpoint := fmt.Sprintf(kinesisURL, region)
+	return &Kinesis{client: client, version: "20131202", region: region, endpoint: endpoint}
 }
 
 // NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
 // This is generally useful for testing, so a local Kinesis server can be used.
-func NewWithEndpoint(auth Auth, region Region, endpoint string) *Kinesis {
+func NewWithEndpoint(auth Auth, region string, endpoint string) *Kinesis {
 	// TODO: remove trailing slash on endpoint if there is one? does it matter?
 	// TODO: validate endpoint somehow?
-	return &Kinesis{client: NewClient(auth), Version: "20131202", Region: GetRegion(region), endpoint: endpoint}
+	return &Kinesis{client: NewClient(auth), version: "20131202", region: region, endpoint: endpoint}
 }
 
 // Create params object for request
 func makeParams(action string) map[string]string {
 	params := make(map[string]string)
-	params[ACTION_KEY] = action
+	params[ActionKey] = action
 	return params
 }
 
@@ -182,7 +171,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 
 	// headers
 	request.Header.Set("Content-Type", "application/x-amz-json-1.1")
-	request.Header.Set("X-Amz-Target", fmt.Sprintf("Kinesis_%s.%s", kinesis.Version, params[ACTION_KEY]))
+	request.Header.Set("X-Amz-Target", fmt.Sprintf("Kinesis_%s.%s", kinesis.version, params[ActionKey]))
 	request.Header.Set("User-Agent", "Golang Kinesis")
 
 	// response

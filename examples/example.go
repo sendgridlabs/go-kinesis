@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
+	// kinesis "github.com/sendgridlabs/go-kinesis"
 	kinesis "github.com/sendgridlabs/go-kinesis"
 )
 
-func getRecords(ksis *kinesis.Kinesis, streamName, ShardId string) {
+func getRecords(ksis kinesis.KinesisClient, streamName, ShardId string) {
 	args := kinesis.NewArgs()
 	args.Add("StreamName", streamName)
 	args.Add("ShardId", ShardId)
@@ -51,7 +53,11 @@ func main() {
 	streamName := "test"
 	// set env variables AWS_ACCESS_KEY and AWS_SECRET_KEY AWS_REGION_NAME
 	auth, err = kinesis.NewAuthFromEnv()
-	ksis := kinesis.New(auth, kinesis.Region{})
+	if err != nil {
+		fmt.Printf("Unable to retrieve authentication credentials from the environment: %v", err)
+		os.Exit(1)
+	}
+	ksis := kinesis.New(auth, "")
 
 	err = ksis.CreateStream(streamName, 2)
 	if err != nil {
