@@ -15,6 +15,8 @@ You can find a tool for interacting with kinesis from the command line in folder
 
 ## Testing
 
+### Local Kinesis Server
+
 The tests require a local Kinesis server such as [Kinesalite](https://github.com/mhart/kinesalite)
 to be running and reachable at `http://127.0.0.1:4567`.
 
@@ -24,3 +26,8 @@ deletion faster than the default of 500ms, like so:
     kinesalite --createStreamMs 5 --deleteStreamMs 5 &
 
 The `&` runs Kinesalite in the background, which is probably what you want.
+
+### go test
+
+Some of the tests are marked as safe to be run in parallel, so to speed up test execution you might
+want to run `go test` with [the `-parallel n` flag](https://golang.org/cmd/go/#hdr-Description_of_testing_flags).

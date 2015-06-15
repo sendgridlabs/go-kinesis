@@ -6,7 +6,7 @@ before_install:
 before_script:
   - kinesalite --createStreamMs 5 --deleteStreamMs 5 &
 
-script: go test
+script: go test -parallel 2
 
 notifications:
   email: false
