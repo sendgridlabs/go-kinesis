@@ -3,7 +3,10 @@
 
 GO-lang library for AWS Kinesis API.
 
-## [API Documentation](http://godoc.org/github.com/sendgridlabs/go-kinesis)
+## Documentation
+
+* [Core API](http://godoc.org/github.com/sendgridlabs/go-kinesis)
+* [Batch Producer API](http://godoc.org/github.com/sendgridlabs/go-kinesis/batchproducer)
 
 ## Example
 
