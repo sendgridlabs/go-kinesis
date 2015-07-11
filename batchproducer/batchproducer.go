@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/timehop/go-kinesis"
+	"github.com/sendgridlabs/go-kinesis"
 )
 
 // MaxKinesisBatchSize is the maximum number of records that Kinesis accepts in a request
