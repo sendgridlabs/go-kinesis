@@ -8,6 +8,8 @@ before_script:
 
 script: go test ./... -parallel 2
 
+sudo: false
+
 notifications:
   email: false
 
