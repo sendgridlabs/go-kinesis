@@ -12,8 +12,10 @@ import (
 )
 
 const (
-	AccessEnvKey = "AWS_ACCESS_KEY"
-	SecretEnvKey = "AWS_SECRET_KEY"
+	AccessEnvKey       = "AWS_ACCESS_KEY"
+	AccessEnvKeyId     = "AWS_ACCESS_KEY_ID"
+	SecretEnvKey       = "AWS_SECRET_KEY"
+	SecretEnvAccessKey = "AWS_SECRET_ACCESS_KEY"
 
 	AWSMetadataServer = "169.254.169.254"
 	AWSIAMCredsPath   = "/latest/meta-data/iam/security-credentials"
@@ -54,12 +56,20 @@ func NewAuth(accessKey, secretKey string) *AuthCredentials {
 // NewAuthFromEnv retrieves auth credentials from environment vars
 func NewAuthFromEnv() (*AuthCredentials, error) {
 	accessKey := os.Getenv(AccessEnvKey)
-	secretKey := os.Getenv(SecretEnvKey)
 	if accessKey == "" {
-		return nil, fmt.Errorf("Unable to retrieve access key from %s env variable", AccessEnvKey)
+		accessKey = os.Getenv(AccessEnvKeyId)
+	}
+
+	secretKey := os.Getenv(SecretEnvKey)
+	if secretKey == "" {
+		secretKey = os.Getenv(SecretEnvAccessKey)
+	}
+
+	if accessKey == "" {
+		return nil, fmt.Errorf("Unable to retrieve access key from %s or %s env variables", AccessEnvKey, AccessEnvKeyId)
 	}
 	if secretKey == "" {
-		return nil, fmt.Errorf("Unable to retrieve secret key from %s env variable", SecretEnvKey)
+		return nil, fmt.Errorf("Unable to retrieve secret key from %s or %s env variables", SecretEnvKey, SecretEnvAccessKey)
 	}
 
 	return NewAuth(accessKey, secretKey), nil
