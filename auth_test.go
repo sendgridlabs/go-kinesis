@@ -42,6 +42,25 @@ func TestNewAuthFromEnv(t *testing.T) {
 		t.Error("Expected SecretKey to be inferred as \"asdf\"")
 	}
 
+	// Validate that the fallback environment variables will also work
 	os.Setenv(AccessEnvKey, "") // Use Unsetenv with go1.4
 	os.Setenv(SecretEnvKey, "") // Use Unsetenv with go1.4
+}
+
+func TestNewAuthFromEnvWithFallbackVars(t *testing.T) {
+	os.Setenv(AccessEnvKeyId, "asdf")
+	os.Setenv(SecretEnvAccessKey, "asdf")
+
+	auth, _ := NewAuthFromEnv()
+
+	if auth.GetAccessKey() != "asdf" {
+		t.Error("Expected AccessKey to be inferred as \"asdf\"")
+	}
+
+	if auth.GetSecretKey() != "asdf" {
+		t.Error("Expected SecretKey to be inferred as \"asdf\"")
+	}
+
+	os.Setenv(AccessEnvKeyId, "")
+	os.Setenv(SecretEnvAccessKey, "")
 }
