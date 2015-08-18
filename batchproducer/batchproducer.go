@@ -344,7 +344,9 @@ func (b *batchProducer) sendBatch(batchSize int) int {
 			b.logger.Printf("DROPPING %v records because buffer is full or nearly full and there have been %v consecutive errors from Kinesis", len(records), b.consecutiveErrors)
 		} else {
 			b.logger.Printf("Returning %v records to buffer (%v consecutive errors)", len(records), b.consecutiveErrors)
-			b.returnRecordsToBuffer(records)
+			// returnRecordsToBuffer can block if the buffer (channel) if full so we’ll
+			// call it in a goroutine. This might be problematic WRT ordering. TODO: revisit this.
+			go b.returnRecordsToBuffer(records)
 		}
 
 		return 0
@@ -360,7 +362,9 @@ func (b *batchProducer) sendBatch(batchSize int) int {
 		b.logger.Printf("PutRecords request succeeded: sent %v records to Kinesis stream %v", succeeded, b.streamName)
 	} else {
 		b.logger.Printf("Partial success when sending a PutRecords request to Kinesis stream %v: %v succeeded, %v failed. Re-enqueueing failed records.", b.streamName, succeeded, res.FailedRecordCount)
-		b.returnSomeFailedRecordsToBuffer(res, records)
+		// returnSomeFailedRecordsToBuffer can block if the buffer (channel) if full so we’ll
+		// call it in a goroutine. This might be problematic WRT ordering. TODO: revisit this.
+		go b.returnSomeFailedRecordsToBuffer(res, records)
 	}
 
 	return succeeded
@@ -400,8 +404,10 @@ func (b *batchProducer) recordsToArgs(records []batchRecord) *kinesis.RequestArg
 	return args
 }
 
-// TODO: perhaps we should use a deque internally as the buffer so we can return records to
-// the front of the queue.
+// returnRecordsToBuffer can block if the buffer (channel) is full, so you might want to
+// call it in a goroutine.
+// TODO: we should probably use a deque internally as the buffer so we can return records to
+// the front of the queue, so as to preserve order, which is important.
 func (b *batchProducer) returnRecordsToBuffer(records []batchRecord) {
 	for _, record := range records {
 		// Not using b.Add because we want to preserve the value of record.sendAttempts.
@@ -409,6 +415,10 @@ func (b *batchProducer) returnRecordsToBuffer(records []batchRecord) {
 	}
 }
 
+// returnSomeFailedRecordsToBuffer can block if the buffer (channel) is full, so you might want to
+// call it in a goroutine.
+// TODO: we should probably use a deque internally as the buffer so we can return records to
+// the front of the queue, so as to preserve order, which is important.
 func (b *batchProducer) returnSomeFailedRecordsToBuffer(res *kinesis.PutRecordsResp, records []batchRecord) {
 	for i, result := range res.Records {
 		record := records[i]

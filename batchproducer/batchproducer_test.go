@@ -298,7 +298,7 @@ func TestBatchError(t *testing.T) {
 	b.Start()
 	defer b.Stop()
 
-	b.addRecordsAndWait(5, 1)
+	b.addRecordsAndWait(5, 5)
 	if b.consecutiveErrors != 1 {
 		t.Errorf("%v != 1", b.consecutiveErrors)
 	}
@@ -351,7 +351,7 @@ func TestBatchPartialFailure(t *testing.T) {
 	b.Add([]byte("foo"), "fail")
 
 	// First attempt
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 	if len(b.records) != 1 {
 		t.Errorf("%v != 1", len(b.records))
 	}
@@ -545,7 +545,7 @@ func TestKinesisErrorsStatWhenKinesisReturnsError(t *testing.T) {
 	b.Start()
 	defer b.Stop()
 
-	b.addRecordsAndWait(20, 1)
+	b.addRecordsAndWait(20, 5)
 	b.Stop()
 
 	if sr.totalKinesisErrorsSinceLastStat != 2 {
