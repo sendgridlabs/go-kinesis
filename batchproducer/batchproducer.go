@@ -66,6 +66,10 @@ type BatchingKinesisClient interface {
 	PutRecords(args *kinesis.RequestArgs) (resp *kinesis.PutRecordsResp, err error)
 }
 
+type BatchProducerLogger interface {
+	Printf(format string, args ...interface{})
+}
+
 // Config is a collection of config values for a Producer
 type Config struct {
 	// AddBlocksWhenBufferFull controls the behavior of Add when the buffer is full. If true, Add
@@ -91,7 +95,7 @@ type Config struct {
 	FlushInterval time.Duration
 
 	// The logger used by the Producer.
-	Logger *log.Logger
+	Logger BatchProducerLogger
 
 	// MaxAttemptsPerRecord defines how many attempts should be made for each record before it is
 	// dropped. You probably want this higher than the init default of 0.
@@ -166,7 +170,7 @@ type batchProducer struct {
 	client            BatchingKinesisClient
 	streamName        string
 	config            Config
-	logger            *log.Logger
+	logger            BatchProducerLogger
 	running           bool
 	runningMu         sync.RWMutex
 	consecutiveErrors int
