@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 )
 
 const (
@@ -24,7 +25,11 @@ const (
 	APSouthEast2 = "ap-southeast-2"
 	APNortheast1 = "ap-northeast-1"
 
-	kinesisURL = "https://kinesis.%s.amazonaws.com"
+	KinesisVersion  = "20131202"
+	FirehoseVersion = "20150804"
+
+	kinesisURL  = "https://kinesis.%s.amazonaws.com"
+	firehoseURL = "https://firehose.%s.amazonaws.com"
 )
 
 // NewRegionFromEnv creates a region from the an expected environment variable
@@ -34,10 +39,15 @@ func NewRegionFromEnv() string {
 
 // Structure for kinesis client
 type Kinesis struct {
-	client   *Client
-	endpoint string
-	region   string
-	version  string
+	client     *Client
+	endpoint   string
+	region     string
+	version    string
+	streamType string
+
+	typeMu     sync.Mutex
+	versionMu  sync.Mutex
+	endpointMu sync.Mutex
 }
 
 // KinesisClient interface implemented by Kinesis
@@ -45,12 +55,14 @@ type KinesisClient interface {
 	CreateStream(StreamName string, ShardCount int) error
 	DeleteStream(StreamName string) error
 	DescribeStream(args *RequestArgs) (resp *DescribeStreamResp, err error)
+	DescribeDeliveryStream(args *RequestArgs) (resp *DescribeDeliveryStreamResp, err error)
 	GetRecords(args *RequestArgs) (resp *GetRecordsResp, err error)
 	GetShardIterator(args *RequestArgs) (resp *GetShardIteratorResp, err error)
 	ListStreams(args *RequestArgs) (resp *ListStreamsResp, err error)
 	MergeShards(args *RequestArgs) error
 	PutRecord(args *RequestArgs) (resp *PutRecordResp, err error)
 	PutRecords(args *RequestArgs) (resp *PutRecordsResp, err error)
+	PutRecordBatch(args *RequestArgs) (resp *PutRecordBatchResp, err error)
 	SplitShard(args *RequestArgs) error
 }
 
@@ -66,15 +78,15 @@ func New(auth Auth, region string) *Kinesis {
 // with specific configurations like a timeout
 func NewWithClient(region string, client *Client) *Kinesis {
 	endpoint := fmt.Sprintf(kinesisURL, region)
-	return &Kinesis{client: client, version: "20131202", region: region, endpoint: endpoint}
+	return &Kinesis{client: client, version: KinesisVersion, region: region, endpoint: endpoint, streamType: "Kinesis"}
 }
 
 // NewWithEndpoint returns an initialized AWS Kinesis client using the specified endpoint.
 // This is generally useful for testing, so a local Kinesis server can be used.
-func NewWithEndpoint(auth Auth, region string, endpoint string) *Kinesis {
+func NewWithEndpoint(auth Auth, region, endpoint string) *Kinesis {
 	// TODO: remove trailing slash on endpoint if there is one? does it matter?
 	// TODO: validate endpoint somehow?
-	return &Kinesis{client: NewClient(auth), version: "20131202", region: region, endpoint: endpoint}
+	return &Kinesis{client: NewClient(auth), version: KinesisVersion, region: region, endpoint: endpoint, streamType: "Kinesis"}
 }
 
 // Create params object for request
@@ -151,6 +163,48 @@ func buildError(r *http.Response) error {
 	return &err
 }
 
+func (k *Kinesis) getStreamType() string {
+	k.typeMu.Lock()
+	defer k.typeMu.Unlock()
+	return k.streamType
+}
+
+func (k *Kinesis) setStreamType(streamType string) {
+	k.typeMu.Lock()
+	k.streamType = streamType
+	k.typeMu.Unlock()
+}
+
+func (k *Kinesis) getVersion() string {
+	k.versionMu.Lock()
+	defer k.versionMu.Unlock()
+	return k.version
+}
+
+func (k *Kinesis) setVersion(version string) {
+	k.versionMu.Lock()
+	k.version = version
+	k.versionMu.Unlock()
+}
+
+func (k *Kinesis) getEndpoint() string {
+	k.endpointMu.Lock()
+	defer k.endpointMu.Unlock()
+	return k.endpoint
+}
+
+func (k *Kinesis) setEndpoint(endpoint string) {
+	k.endpointMu.Lock()
+	k.endpoint = endpoint
+	k.endpointMu.Unlock()
+}
+
+func (k *Kinesis) Firehose() {
+	k.setStreamType("Firehose")
+	k.setVersion(FirehoseVersion)
+	k.setEndpoint(fmt.Sprintf(firehoseURL, k.region))
+}
+
 // Query by AWS API
 func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp interface{}) error {
 	jsonData, err := json.Marshal(data)
@@ -161,7 +215,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 	// request
 	request, err := http.NewRequest(
 		"POST",
-		kinesis.endpoint,
+		kinesis.getEndpoint(),
 		bytes.NewReader(jsonData),
 	)
 
@@ -171,7 +225,7 @@ func (kinesis *Kinesis) query(params map[string]string, data interface{}, resp i
 
 	// headers
 	request.Header.Set("Content-Type", "application/x-amz-json-1.1")
-	request.Header.Set("X-Amz-Target", fmt.Sprintf("Kinesis_%s.%s", kinesis.version, params[ActionKey]))
+	request.Header.Set("X-Amz-Target", fmt.Sprintf("%s_%s.%s", kinesis.getStreamType(), kinesis.getVersion(), params[ActionKey]))
 	request.Header.Set("User-Agent", "Golang Kinesis")
 
 	// response
