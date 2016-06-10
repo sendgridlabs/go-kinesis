@@ -41,7 +41,7 @@ func TestAddRecord(t *testing.T) {
 }
 
 func TestListStreams(t *testing.T) {
-	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
+	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
 	client := NewWithEndpoint(auth, USEast1, localEndpoint)
 	resp, err := client.ListStreams(NewArgs())
 	if resp == nil {
@@ -53,7 +53,7 @@ func TestListStreams(t *testing.T) {
 }
 
 func TestCreateStream(t *testing.T) {
-	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
+	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
 	client := NewWithEndpoint(auth, USEast1, localEndpoint)
 
 	streamName := "test2"
@@ -77,7 +77,7 @@ func TestCreateStream(t *testing.T) {
 
 // Older, lower-level way to use PutRecord
 func TestPutRecordWithAddData(t *testing.T) {
-	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
+	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
 	client := NewWithEndpoint(auth, USEast1, localEndpoint)
 
 	streamName := "pizza"
@@ -109,7 +109,7 @@ func TestPutRecordWithAddData(t *testing.T) {
 
 // Newer, higher-level way to use PutRecord
 func TestPutRecordWithAddRecord(t *testing.T) {
-	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY")
+	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
 	client := NewWithEndpoint(auth, USEast1, localEndpoint)
 
 	streamName := "pizza"

@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	AccessEnvKey       = "AWS_ACCESS_KEY"
-	AccessEnvKeyId     = "AWS_ACCESS_KEY_ID"
-	SecretEnvKey       = "AWS_SECRET_KEY"
-	SecretEnvAccessKey = "AWS_SECRET_ACCESS_KEY"
+	AccessEnvKey        = "AWS_ACCESS_KEY"
+	AccessEnvKeyId      = "AWS_ACCESS_KEY_ID"
+	SecretEnvKey        = "AWS_SECRET_KEY"
+	SecretEnvAccessKey  = "AWS_SECRET_ACCESS_KEY"
+	SecurityTokenEnvKey = "AWS_SECURITY_TOKEN"
 
 	AWSMetadataServer = "169.254.169.254"
 	AWSIAMCredsPath   = "/latest/meta-data/iam/security-credentials"
@@ -46,10 +47,11 @@ type AuthCredentials struct {
 
 // NewAuth creates a *AuthCredentials struct that adheres to the Auth interface to
 // dynamically retrieve AWS credentials
-func NewAuth(accessKey, secretKey string) *AuthCredentials {
+func NewAuth(accessKey, secretKey, token string) *AuthCredentials {
 	return &AuthCredentials{
 		accessKey: accessKey,
 		secretKey: secretKey,
+		token:     token,
 	}
 }
 
@@ -65,14 +67,19 @@ func NewAuthFromEnv() (*AuthCredentials, error) {
 		secretKey = os.Getenv(SecretEnvAccessKey)
 	}
 
+	token := os.Getenv(SecurityTokenEnvKey)
+
 	if accessKey == "" {
 		return nil, fmt.Errorf("Unable to retrieve access key from %s or %s env variables", AccessEnvKey, AccessEnvKeyId)
 	}
 	if secretKey == "" {
 		return nil, fmt.Errorf("Unable to retrieve secret key from %s or %s env variables", SecretEnvKey, SecretEnvAccessKey)
 	}
+	if token == "" {
+		return nil, fmt.Errorf("Unable to retrieve security token from %s env variable", SecurityTokenEnvKey)
+	}
 
-	return NewAuth(accessKey, secretKey), nil
+	return NewAuth(accessKey, secretKey, token), nil
 }
 
 // NewAuthFromMetadata retrieves auth credentials from the metadata
