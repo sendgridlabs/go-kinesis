@@ -69,14 +69,14 @@ func NewAuthFromEnv() (*AuthCredentials, error) {
 
 	token := os.Getenv(SecurityTokenEnvKey)
 
+	if accessKey == "" && secretKey == "" && token == "" {
+		return nil, fmt.Errorf("No access key (%s or %s), secret key (%s or %s), or security token (%s) env variables were set", AccessEnvKey, AccessEnvKeyId, SecretEnvKey, SecretEnvAccessKey, SecurityTokenEnvKey)
+	}
 	if accessKey == "" {
 		return nil, fmt.Errorf("Unable to retrieve access key from %s or %s env variables", AccessEnvKey, AccessEnvKeyId)
 	}
 	if secretKey == "" {
 		return nil, fmt.Errorf("Unable to retrieve secret key from %s or %s env variables", SecretEnvKey, SecretEnvAccessKey)
-	}
-	if token == "" {
-		return nil, fmt.Errorf("Unable to retrieve security token from %s env variable", SecurityTokenEnvKey)
 	}
 
 	return NewAuth(accessKey, secretKey, token), nil

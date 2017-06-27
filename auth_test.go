@@ -56,10 +56,48 @@ func TestNewAuthFromEnv(t *testing.T) {
 	}
 
 	if auth.GetToken() != "dummy_token" {
-		t.Error("Expected SecretKey to be inferred as \"dummy_token\"")
+		t.Error("Expected SecurityToken to be inferred as \"dummy_token\"")
 	}
 }
 
+func TestNewAuthFromEnvWithoutSecurityToken(t *testing.T) {
+	os.Setenv(AccessEnvKey, "asdf")
+	os.Setenv(SecretEnvKey, "asdf2")
+	os.Unsetenv(SecurityTokenEnvKey)
+	// Validate that the fallback environment variables will also work
+	defer os.Unsetenv(AccessEnvKey)
+	defer os.Unsetenv(SecretEnvKey)
+
+	auth, _ := NewAuthFromEnv()
+
+	if auth.GetAccessKey() != "asdf" {
+		t.Error("Expected AccessKey to be inferred as \"asdf\"")
+	}
+
+	if auth.GetSecretKey() != "asdf2" {
+		t.Error("Expected SecretKey to be inferred as \"asdf2\"")
+	}
+
+	if auth.GetToken() != "" {
+		t.Error("Expected SecurityToken to be an empty string")
+	}
+}
+
+func TestNewAuthFromEnvWithoutVars(t *testing.T) {
+	os.Unsetenv(AccessEnvKey)
+	os.Unsetenv(SecretEnvKey)
+	os.Unsetenv(SecurityTokenEnvKey)
+
+	auth, err := NewAuthFromEnv()
+
+	if auth != nil {
+		t.Error("Expected auth instance to be nil but was non-nil")
+	}
+
+	if err == nil {
+		t.Error("Expected error to be non-nil but was nil")
+	}
+}
 func TestNewAuthFromEnvWithFallbackVars(t *testing.T) {
 	os.Setenv(AccessEnvKeyId, "asdf")
 	os.Setenv(SecretEnvAccessKey, "asdf2")
