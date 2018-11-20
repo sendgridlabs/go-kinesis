@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ const (
 )
 
 var lf = []byte{'\n'}
+var awsKinesisRegexp = regexp.MustCompile(`kinesis.(.*).amazonaws.com`)
 
 // Service represents an AWS-compatible service.
 type Service struct {
@@ -34,13 +36,12 @@ type Service struct {
 
 // Sign signs a request with a Service derived from r.Host
 func Sign(authKeys Auth, r *http.Request) error {
-	parts := strings.Split(r.Host, ".")
-	if len(parts) < 4 {
-		return fmt.Errorf("Invalid AWS Endpoint: %s", r.Host)
-	}
 	sv := new(Service)
-	sv.Name = parts[0]
-	sv.Region = parts[1]
+	if awsKinesisRegexp.MatchString(r.Host) {
+		parts := strings.Split(r.Host, ".")
+		sv.Name = parts[0]
+		sv.Region = parts[1]
+	}
 	return sv.Sign(authKeys, r)
 }
 
