@@ -58,12 +58,21 @@ func (s *Service) Sign(authKeys Auth, r *http.Request) error {
 	}
 	r.Header.Set("Date", t.Format(iSO8601BasicFormat))
 
-	k := authKeys.Sign(s, t)
+	sk, err := authKeys.KeyForSigning(t)
+	if err != nil {
+		return err
+	}
+
+	k := ghmac([]byte("AWS4"+sk.SecretAccessKey), []byte(t.Format(iSO8601BasicFormatShort)))
+	k = ghmac(k, []byte(s.Region))
+	k = ghmac(k, []byte(s.Name))
+	k = ghmac(k, []byte(AWS4_URL))
+
 	h := hmac.New(sha256.New, k)
 	s.writeStringToSign(h, t, r)
 
 	auth := bytes.NewBufferString("AWS4-HMAC-SHA256 ")
-	auth.Write([]byte("Credential=" + authKeys.GetAccessKey() + "/" + s.creds(t)))
+	auth.Write([]byte("Credential=" + sk.AccessKeyId + "/" + s.creds(t)))
 	auth.Write([]byte{',', ' '})
 	auth.Write([]byte("SignedHeaders="))
 	s.writeHeaderList(auth, r)
@@ -71,6 +80,10 @@ func (s *Service) Sign(authKeys Auth, r *http.Request) error {
 	auth.Write([]byte("Signature=" + fmt.Sprintf("%x", h.Sum(nil))))
 
 	r.Header.Set("Authorization", auth.String())
+
+	if sk.SessionToken != "" {
+		r.Header.Add(AWSSecurityTokenHeader, sk.SessionToken)
+	}
 
 	return nil
 }
