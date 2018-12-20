@@ -5,6 +5,7 @@ before_install:
 
 before_script:
   - kinesalite --createStreamMs 5 --deleteStreamMs 5 &
+  - sleep 1
 
 script: go test ./... -parallel 2
 
