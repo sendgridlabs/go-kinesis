@@ -3,35 +3,29 @@ package kinesis
 import (
 	"os"
 	"testing"
+	"time"
 )
-
-func TestAuthInterfaceIsImplemented(t *testing.T) {
-	var auth Auth = &AuthCredentials{}
-	if auth == nil {
-		t.Error("Invalid nil auth credentials value")
-	}
-}
 
 func TestGetSecretKey(t *testing.T) {
 	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
-
-	if auth.GetAccessKey() != "BAD_ACCESS_KEY" {
+	sk, _ := auth.KeyForSigning(time.Now())
+	if sk.AccessKeyId != "BAD_ACCESS_KEY" {
 		t.Error("incorrect value for auth#accessKey")
 	}
 }
 
 func TestGetAccessKey(t *testing.T) {
 	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
-
-	if auth.GetSecretKey() != "BAD_SECRET_KEY" {
+	sk, _ := auth.KeyForSigning(time.Now())
+	if sk.SecretAccessKey != "BAD_SECRET_KEY" {
 		t.Error("incorrect value for auth#secretKey")
 	}
 }
 
 func TestGetToken(t *testing.T) {
 	auth := NewAuth("BAD_ACCESS_KEY", "BAD_SECRET_KEY", "BAD_SECURITY_TOKEN")
-
-	if auth.GetToken() != "BAD_SECURITY_TOKEN" {
+	sk, _ := auth.KeyForSigning(time.Now())
+	if sk.SessionToken != "BAD_SECURITY_TOKEN" {
 		t.Error("incorrect value for auth#token")
 	}
 }
@@ -46,16 +40,17 @@ func TestNewAuthFromEnv(t *testing.T) {
 	defer os.Unsetenv(SecurityTokenEnvKey)
 
 	auth, _ := NewAuthFromEnv()
+	sk, _ := auth.KeyForSigning(time.Now())
 
-	if auth.GetAccessKey() != "asdf" {
+	if sk.AccessKeyId != "asdf" {
 		t.Error("Expected AccessKey to be inferred as \"asdf\"")
 	}
 
-	if auth.GetSecretKey() != "asdf2" {
+	if sk.SecretAccessKey != "asdf2" {
 		t.Error("Expected SecretKey to be inferred as \"asdf2\"")
 	}
 
-	if auth.GetToken() != "dummy_token" {
+	if sk.SessionToken != "dummy_token" {
 		t.Error("Expected SecurityToken to be inferred as \"dummy_token\"")
 	}
 }
@@ -69,16 +64,17 @@ func TestNewAuthFromEnvWithoutSecurityToken(t *testing.T) {
 	defer os.Unsetenv(SecretEnvKey)
 
 	auth, _ := NewAuthFromEnv()
+	sk, _ := auth.KeyForSigning(time.Now())
 
-	if auth.GetAccessKey() != "asdf" {
+	if sk.AccessKeyId != "asdf" {
 		t.Error("Expected AccessKey to be inferred as \"asdf\"")
 	}
 
-	if auth.GetSecretKey() != "asdf2" {
+	if sk.SecretAccessKey != "asdf2" {
 		t.Error("Expected SecretKey to be inferred as \"asdf2\"")
 	}
 
-	if auth.GetToken() != "" {
+	if sk.SessionToken != "" {
 		t.Error("Expected SecurityToken to be an empty string")
 	}
 }
@@ -107,12 +103,13 @@ func TestNewAuthFromEnvWithFallbackVars(t *testing.T) {
 	defer os.Unsetenv(SecurityTokenEnvKey)
 
 	auth, _ := NewAuthFromEnv()
+	sk, _ := auth.KeyForSigning(time.Now())
 
-	if auth.GetAccessKey() != "asdf" {
+	if sk.AccessKeyId != "asdf" {
 		t.Error("Expected AccessKey to be inferred as \"asdf\"")
 	}
 
-	if auth.GetSecretKey() != "asdf2" {
+	if sk.SecretAccessKey != "asdf2" {
 		t.Error("Expected SecretKey to be inferred as \"asdf2\"")
 	}
 }
