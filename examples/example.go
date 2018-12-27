@@ -57,7 +57,8 @@ func main() {
 		fmt.Printf("Unable to retrieve authentication credentials from the environment: %v", err)
 		os.Exit(1)
 	}
-	ksis := kinesis.New(auth, "")
+	region := os.Getenv("AWS_REGION_NAME")
+	ksis := kinesis.New(auth, region)
 
 	err = ksis.CreateStream(streamName, 2)
 	if err != nil {
