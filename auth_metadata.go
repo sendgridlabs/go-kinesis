@@ -53,8 +53,13 @@ func (mc *metadataCreds) ExpiringKeyForSigning(now time.Time) (*SigningKey, time
 
 func retrieveAWSCredentials(role string) (map[string]string, error) {
 	var bodybytes []byte
+
+	client := http.Client{
+		Timeout: time.Duration(10 * time.Second),
+	}
+
 	// Retrieve the json for this role
-	resp, err := http.Get(fmt.Sprintf("%s/%s", AWSIAMCredsURL, role))
+	resp, err := client.Get(fmt.Sprintf("%s/%s", AWSIAMCredsURL, role))
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, err
 	}
@@ -77,7 +82,11 @@ func retrieveAWSCredentials(role string) (map[string]string, error) {
 func retrieveIAMRole() (string, error) {
 	var bodybytes []byte
 
-	resp, err := http.Get(AWSIAMCredsURL)
+	client := http.Client{
+		Timeout: time.Duration(10 * time.Second),
+	}
+
+	resp, err := client.Get(AWSIAMCredsURL)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return "", err
 	}
