@@ -102,7 +102,7 @@ type RequestArgs struct {
 	Records []Record
 }
 
-// NewFilter creates a new Filter.
+// NewArgs creates a new Filter.
 func NewArgs() *RequestArgs {
 	return &RequestArgs{
 		params: make(map[string]interface{}),
@@ -129,7 +129,7 @@ type Error struct {
 	RequestId string
 }
 
-// Return error message from error object
+// Error returns error message from error object
 func (err *Error) Error() string {
 	if err.Code == "" {
 		return err.Message
@@ -473,7 +473,7 @@ type PutRecordsRespRecord struct {
 	ShardId        string
 }
 
-// Add data and partition for sending multiple Records to Kinesis in one API call
+// AddRecord adds data and partition for sending multiple Records to Kinesis in one API call
 func (f *RequestArgs) AddRecord(value []byte, partitionKey string) {
 	r := Record{
 		Data:         value,
